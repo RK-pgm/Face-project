@@ -1,0 +1,41 @@
+{% load static %}<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}ระบบล็อกอินด้วยใบหน้า{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}">
+</head>
+<body data-model-url="{% static 'vendor/face-api/models' %}">
+
+<header class="site-bar">
+  <div class="page d-flex align-items-center justify-content-between py-2">
+    <a class="brand" href="{% url 'home' %}">ระบบล็อกอินด้วยใบหน้า</a>
+    <nav class="d-flex align-items-center gap-3">
+      {% if person %}
+        <a class="nav-link p-0" href="{% url 'dashboard' %}">หน้าของฉัน</a>
+        <form method="post" action="{% url 'logout' %}" class="m-0">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-secondary btn-sm">ออกจากระบบ</button>
+        </form>
+      {% else %}
+        <a class="nav-link p-0" href="{% url 'login' %}">เข้าสู่ระบบ</a>
+        <a class="nav-link p-0" href="{% url 'register' %}">สมัครสมาชิก</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

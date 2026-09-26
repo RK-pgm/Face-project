@@ -1,0 +1,16 @@
+# ข้อมูลส่วนบุคคลและความลับ — ห้ามเอาขึ้น GitHub เด็ดขาด
+.env
+*.json.key
+service-account*.json
+*credentials*.json
+db.sqlite3
+media/*
+!media/.gitkeep
+
+# ไฟล์ที่โปรแกรมสร้าง
+venv/
+.venv/
+__pycache__/
+*.pyc
+.idea/
+.vscode/

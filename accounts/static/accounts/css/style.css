@@ -1,0 +1,140 @@
+/* ==========================================================================
+   สไตล์ของระบบล็อกอินด้วยใบหน้า
+   วางทับ Bootstrap: โทนเขียวเข้ม พื้นหลังเทาอมเขียวอ่อน ตัวอักษร Sarabun (ฟอนต์ไทย)
+   ฟอนต์ถูกเก็บไว้ใน static/fonts จึงใช้งานได้แม้ไม่มีอินเทอร์เน็ต
+   ========================================================================== */
+
+@font-face {
+  font-family: "Sarabun"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../../fonts/sarabun-thai-400-normal.woff2") format("woff2");
+  unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;
+}
+@font-face {
+  font-family: "Sarabun"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("../../fonts/sarabun-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Sarabun"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("../../fonts/sarabun-thai-600-normal.woff2") format("woff2");
+  unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;
+}
+@font-face {
+  font-family: "Sarabun"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("../../fonts/sarabun-latin-600-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --ink: #1b2a24;
+  --muted: #5a6a62;
+  --paper: #f2f5f3;
+  --card: #ffffff;
+  --line: #d5ded9;
+  --brand: #1f7a4d;
+  --brand-dark: #155a38;
+  --brand-soft: #e3f1e9;
+  --warn: #9a5b00;
+  --warn-soft: #fdf0d8;
+  --danger: #a3271f;
+  --danger-soft: #fbe7e5;
+
+  --bs-body-font-family: "Sarabun", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --bs-body-color: var(--ink);
+  --bs-body-bg: var(--paper);
+  --bs-border-color: var(--line);
+  --bs-link-color: var(--brand);
+  --bs-link-hover-color: var(--brand-dark);
+}
+
+html { font-size: 17px; }
+body { line-height: 1.7; }  /* ภาษาไทยมีสระ/วรรณยุกต์ซ้อนกัน ต้องเว้นบรรทัดให้โปร่ง */
+h1, h2, h3, h4 { font-weight: 600; line-height: 1.4; }
+
+.btn { font-weight: 600; padding: .55rem 1.1rem; border-radius: .6rem; }
+.btn-primary {
+  --bs-btn-bg: var(--brand); --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand-dark); --bs-btn-hover-border-color: var(--brand-dark);
+  --bs-btn-active-bg: var(--brand-dark); --bs-btn-active-border-color: var(--brand-dark);
+  --bs-btn-disabled-bg: #7fae95; --bs-btn-disabled-border-color: #7fae95;
+  --bs-btn-focus-shadow-rgb: 31, 122, 77;
+}
+.btn-outline-secondary { --bs-btn-color: var(--ink); --bs-btn-border-color: #a9b8b0; }
+
+.form-control { border-radius: .6rem; padding: .6rem .8rem; }
+.form-control:focus, .form-check-input:focus { border-color: var(--brand); box-shadow: 0 0 0 .2rem rgba(31, 122, 77, .2); }
+.form-check-input:checked { background-color: var(--brand); border-color: var(--brand); }
+.form-label { font-weight: 600; margin-bottom: .25rem; }
+.field-error { color: var(--danger); font-size: .9rem; margin-top: .25rem; min-height: 0; }
+.field-error:empty { display: none; }
+
+/* ---------- แถบด้านบน ---------- */
+.site-bar { background: var(--card); border-bottom: 1px solid var(--line); }
+.site-bar .brand { font-weight: 600; color: var(--brand-dark); text-decoration: none; font-size: 1.1rem; }
+.site-bar a.nav-link { color: var(--ink); }
+.site-bar a.nav-link:hover { color: var(--brand); }
+
+.page { max-width: 1040px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+.panel {
+  background: var(--card); border: 1px solid var(--line); border-radius: 1rem;
+  padding: 1.5rem;
+}
+.lead-note { color: var(--muted); }
+
+/* ---------- กล้อง ---------- */
+.camera-frame {
+  position: relative; width: 100%; aspect-ratio: 4 / 3; background: #10201a;
+  border-radius: 1rem; overflow: hidden;
+}
+/* กลับภาพซ้าย-ขวาให้เหมือนส่องกระจก (เฉพาะการแสดงผล ไม่กระทบภาพที่ส่งไปเก็บ) */
+.camera-frame video, .camera-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
+/* มุมทั้งสี่บอกตำแหน่งที่ควรให้ใบหน้าอยู่ */
+.camera-frame::before, .camera-frame::after {
+  content: ""; position: absolute; inset: 12% 22%; pointer-events: none; z-index: 2; opacity: .85;
+  --c: rgba(255, 255, 255, .9); --l: 28px; --t: 3px;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) top left / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / var(--t) var(--l) no-repeat;
+}
+.camera-frame::after {
+  background:
+    linear-gradient(var(--c), var(--c)) bottom left / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / var(--l) var(--t) no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / var(--t) var(--l) no-repeat;
+}
+.camera-placeholder {
+  position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 1rem; color: #d6e6dd; background: #10201a;
+}
+.camera-placeholder[hidden] { display: none; }
+
+.face-status {
+  margin: .75rem 0 0; padding: .5rem .8rem; border-radius: .6rem; font-weight: 600;
+  background: #eef2f0; color: var(--muted);
+}
+.face-status[data-state="ok"] { background: var(--brand-soft); color: var(--brand-dark); }
+.face-status[data-state="warn"] { background: var(--warn-soft); color: var(--warn); }
+.face-status[data-state="error"] { background: var(--danger-soft); color: var(--danger); }
+
+.snapshot { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 1rem; border: 3px solid var(--brand); }
+
+/* ---------- ข้อความแจ้งผลตอนล็อกอิน/สมัคร ---------- */
+.result-box { border-radius: .6rem; padding: .6rem .9rem; font-weight: 600; }
+.result-box[hidden] { display: none; }
+.result-box.error { background: var(--danger-soft); color: var(--danger); }
+.result-box.info { background: var(--brand-soft); color: var(--brand-dark); }
+
+.consent-box { background: #f7faf8; border: 1px solid var(--line); border-radius: .6rem; padding: .8rem 1rem; font-size: .95rem; }
+
+/* ---------- Dashboard ---------- */
+.profile-photo { width: 168px; height: 168px; object-fit: cover; border-radius: 50%; border: 4px solid var(--brand-soft); }
+.member-code { font-family: Consolas, "Courier New", monospace; letter-spacing: .06em; background: var(--brand-soft); color: var(--brand-dark); padding: .1rem .55rem; border-radius: .4rem; font-weight: 700; }
+.badge-ok { background: var(--brand-soft); color: var(--brand-dark); font-weight: 600; }
+.badge-fail { background: var(--danger-soft); color: var(--danger); font-weight: 600; }
+.table > :not(caption) > * > * { padding: .65rem .9rem; }
+
+:focus-visible { outline: 3px solid rgba(31, 122, 77, .5); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

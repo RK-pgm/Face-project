@@ -1,0 +1,52 @@
+{% extends "accounts/base.html" %}
+{% block title %}หน้าของฉัน{% endblock %}
+
+{% block content %}
+<div class="panel mb-4">
+  <div class="row g-4 align-items-center">
+    <div class="col-sm-auto text-center">
+      <img class="profile-photo" src="{% url 'my_photo' %}" alt="รูปหน้าของ {{ person.nickname }}">
+    </div>
+    <div class="col-sm">
+      <h1 class="h3 mb-1">{{ person.first_name }} {{ person.last_name }}</h1>
+      <p class="mb-2 fs-5">ชื่อเล่น: {{ person.nickname }}</p>
+      <p class="mb-1">รหัสสมาชิก: <span class="member-code">{{ person.member_code }}</span></p>
+      <p class="mb-1">เข้าสู่ระบบล่าสุด: {{ last_login|date:"j F Y H:i" }} น.</p>
+      {% if previous_login %}
+        <p class="mb-0 lead-note">ครั้งก่อนหน้า: {{ previous_login|date:"j F Y H:i" }} น.</p>
+      {% endif %}
+    </div>
+    <div class="col-sm-auto">
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-secondary">ออกจากระบบ</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 class="h5">ประวัติการเข้าสู่ระบบ</h2>
+  <p class="lead-note">แสดง 30 ครั้งล่าสุด รวมครั้งที่เข้าไม่สำเร็จด้วย หากมีครั้งที่ไม่ใช่คุณ ให้แจ้งผู้ดูแลระบบ</p>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr><th scope="col">วันที่-เวลา</th><th scope="col">ผลลัพธ์</th></tr>
+      </thead>
+      <tbody>
+      {% for log in logs %}
+        <tr>
+          <td>{{ log.created_at|date:"j F Y H:i:s" }}</td>
+          <td>
+            {% if log.success %}<span class="badge badge-ok">สำเร็จ</span>
+            {% else %}<span class="badge badge-fail">ไม่สำเร็จ</span>{% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="2" class="text-muted">ยังไม่มีประวัติ</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

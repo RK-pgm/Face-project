@@ -1,0 +1,42 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block title %}เข้าสู่ระบบ{% endblock %}
+
+{% block content %}
+<div class="row g-4 align-items-start">
+  <div class="col-md-7">
+    {% include "accounts/_camera.html" %}
+  </div>
+
+  <div class="col-md-5">
+    <div class="panel">
+      <h1 class="h4 mb-1">เข้าสู่ระบบ</h1>
+      <p class="lead-note">กรอกชื่อและรหัสตัวเลข แล้วหันหน้าเข้ากล้อง — ต้องผ่านครบทั้งสามอย่าง</p>
+
+      <form id="login-form" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="name">ชื่อ</label>
+          <input class="form-control" id="name" name="name" type="text" maxlength="50" autocomplete="off" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="pin">รหัสตัวเลข (4-6 หลัก)</label>
+          <input class="form-control" id="pin" name="pin" type="password" inputmode="numeric"
+                 maxlength="6" autocomplete="off" required>
+        </div>
+
+        <div id="result" class="result-box error mb-3" role="alert" hidden></div>
+
+        <button class="btn btn-primary w-100" id="submit-btn" type="submit" disabled>สแกนหน้าและเข้าสู่ระบบ</button>
+      </form>
+
+      <p class="mt-3 mb-0 lead-note">ยังไม่มีบัญชี? <a href="{% url 'register' %}">สมัครสมาชิก</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'vendor/face-api/face-api.js' %}"></script>
+<script src="{% static 'accounts/js/common.js' %}"></script>
+<script src="{% static 'accounts/js/login.js' %}"></script>
+{% endblock %}
