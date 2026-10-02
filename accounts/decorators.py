@@ -1,12 +1,8 @@
 from functools import wraps
-
 from django.contrib import messages
 from django.shortcuts import redirect
-
 from .models import Person
-
 SESSION_KEY = "person_id"
-
 
 def person_login_required(view):
     @wraps(view)
@@ -21,5 +17,4 @@ def person_login_required(view):
         response = view(request, *args, **kwargs)
         response["Cache-Control"] = "private, no-store"
         return response
-
     return wrapper

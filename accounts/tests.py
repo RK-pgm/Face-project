@@ -1,26 +1,16 @@
-"""
-ชุดทดสอบอัตโนมัติ — รันด้วย:  py manage.py test
-
-ทดสอบฝั่ง Django ทั้งหมด (สมัคร, ล็อกอิน, ล็อกชั่วคราว, ส่งชีต ฯลฯ)
-ส่วนที่ต้องใช้กล้องจริง (face-api.js) ต้องทดสอบด้วยมือตามขั้นตอนใน README.md
-"""
 import base64
 import json
 import random
 from io import BytesIO
 from unittest import mock
-
 from django.contrib.auth.hashers import check_password
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
-
 from . import faces, sheets
 from .models import LoginLog, LoginThrottle, Person
 
-
 def make_descriptor(seed, noise=0.0):
-    """สร้าง descriptor ปลอม 128 ค่า (seed เดียวกัน = 'ใบหน้าเดียวกัน', noise = ความคลาดเคลื่อนตอนสแกนซ้ำ)"""
     rng = random.Random(seed)
     base = [rng.uniform(-0.2, 0.2) for _ in range(128)]
     if noise:
@@ -46,8 +36,6 @@ REGISTER_OK = {
     "pin": "1234", "pin_confirm": "1234", "consent": True,
 }
 
-
-# ใช้แฮชแบบเร็วเฉพาะตอนรันเทสต์ (ของจริงใช้ PBKDF2 ที่ช้าโดยตั้งใจ) เพื่อให้เทสต์เสร็จไวขึ้น
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 
@@ -59,7 +47,6 @@ class BaseCase(TestCase):
 
     def login(self, name="สมชาย", pin="1234", descriptor=None, client=None):
         descriptor = descriptor if descriptor is not None else make_descriptor(1, noise=0.005)
-        # TestCase ครอบทุกอย่างไว้ใน transaction ที่ไม่ commit จริง จึงต้องสั่งให้รัน on_commit เอง
         with self.captureOnCommitCallbacks(execute=True):
             return post_json(client or self.client, reverse("login"),
                              {"name": name, "pin": pin, "descriptor": descriptor})
@@ -148,7 +135,7 @@ class RegisterTests(BaseCase):
 class LoginTests(BaseCase):
     def setUp(self):
         self.register(seed=1)
-        self.client = Client()  # ผู้ใช้ใหม่ที่ยังไม่ล็อกอิน
+        self.client = Client() 
 
     def test_success_needs_name_pin_and_face(self):
         with mock.patch("accounts.views.sheets.enqueue_sync") as enqueue:
@@ -166,18 +153,18 @@ class LoginTests(BaseCase):
     def test_wrong_pin_gives_generic_message(self):
         response = self.login(pin="9999")
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["message"], "ข้อมูลไม่ถูกต้อง")
+        self.assertEqual(response.json()["message"], "Data incorrect")
         self.assertEqual(self.client.get(reverse("dashboard")).status_code, 302)
 
     def test_someone_elses_face_rejected(self):
         response = self.login(descriptor=make_descriptor(2))  # คนละใบหน้า
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["message"], "ข้อมูลไม่ถูกต้อง")
+        self.assertEqual(response.json()["message"], "Data incorrect")
 
     def test_unknown_name_gives_same_message(self):
         response = self.login(name="ไม่มีชื่อนี้")
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["message"], "ข้อมูลไม่ถูกต้อง")
+        self.assertEqual(response.json()["message"], "Data incorrect")
 
     def test_all_failures_look_identical_to_the_client(self):
         bodies = {
@@ -207,7 +194,7 @@ class LoginTests(BaseCase):
     def test_lock_after_five_failures_then_even_correct_login_is_blocked(self):
         for _ in range(5):
             self.assertEqual(self.login(pin="0000").status_code, 401)
-        blocked = self.login()  # ข้อมูลถูกต้องแต่ถูกล็อกอยู่
+        blocked = self.login()  
         self.assertEqual(blocked.status_code, 429)
         self.assertTrue(blocked.json()["locked"])
         self.assertIn("นาที", blocked.json()["message"])
@@ -219,7 +206,6 @@ class LoginTests(BaseCase):
         self.assertEqual(self.login().status_code, 200)
 
     def test_lock_also_applies_to_unknown_names(self):
-        # ล็อกด้วยเหมือนกัน เพื่อไม่ให้รู้ว่าชื่อไหนมีอยู่จริง
         for _ in range(5):
             self.login(name="ผีสาง")
         self.assertEqual(self.login(name="ผีสาง").status_code, 429)
@@ -231,14 +217,14 @@ class LoginTests(BaseCase):
         self.client = Client()
         for _ in range(4):
             self.login(pin="0000")
-        self.assertEqual(self.login().status_code, 200)  # ยังไม่ถูกล็อก
+        self.assertEqual(self.login().status_code, 200)  
 
     def test_failures_are_logged_and_visible_on_dashboard(self):
         self.login(pin="0000")
         self.login()
         response = self.client.get(reverse("dashboard"))
-        self.assertContains(response, "ไม่สำเร็จ")
-        self.assertContains(response, "สำเร็จ")
+        self.assertContains(response, "incomplete")
+        self.assertContains(response, "complete")
         person = Person.objects.get()
         self.assertEqual(person.logs.filter(success=False).count(), 1)
         self.assertEqual(person.logs.get(success=False).fail_reason, "pin")
@@ -249,7 +235,6 @@ class LoginTests(BaseCase):
         self.assertEqual(Person.objects.count(), 2)
         me = Client()
         self.assertEqual(self.login(pin="7777", descriptor=make_descriptor(5, 0.005), client=me).status_code, 200)
-        # เข้าด้วย PIN ของคนหนึ่ง แต่หน้าของอีกคน ต้องไม่ผ่าน
         again = Client()
         self.assertEqual(self.login(pin="7777", descriptor=make_descriptor(1, 0.005), client=again).status_code, 401)
 
@@ -300,8 +285,7 @@ class DashboardTests(BaseCase):
         self.register(client=other, seed=9, first_name="อีกคน")
         self.login()
         mine = b"".join(self.client.get(reverse("my_photo")).streaming_content)
-        self.assertTrue(mine.startswith(b"\xff\xd8"))  # เป็นไฟล์ JPEG ของตัวเอง
-        # ไม่มี URL ที่รับ id ของคนอื่นเลย: my_photo ไม่รับพารามิเตอร์
+        self.assertTrue(mine.startswith(b"\xff\xd8")) 
         self.assertEqual(self.client.get("/me/photo/?id=2").status_code, 200)
 
     def test_logout_is_post_only_and_clears_session(self):
@@ -363,14 +347,12 @@ class SheetTests(BaseCase):
         worksheet.append_row.side_effect = ConnectionError("network down")
         with mock.patch.object(sheets, "_get_worksheet", return_value=worksheet):
             response = self.login()
-        self.assertEqual(response.status_code, 200)               # ล็อกอินยังสำเร็จ
+        self.assertEqual(response.status_code, 200)               
         self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
         log = LoginLog.objects.get(success=True)
         self.assertEqual(log.sheet_status, "failed")
         self.assertEqual(log.sheet_attempts, 1)
         self.assertIn("ConnectionError", log.sheet_error)
-
-        # เน็ตกลับมา: ลองส่งใหม่ (เหมือนสั่ง manage.py sync_sheet)
         good = mock.MagicMock()
         with mock.patch.object(sheets, "_get_worksheet", return_value=good):
             sent, failed = sheets.sync_pending_logs()

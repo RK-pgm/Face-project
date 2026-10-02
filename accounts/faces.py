@@ -17,16 +17,16 @@ class FaceDataError(ValueError):
     """ข้อมูลใบหน้าที่ส่งมาไม่ถูกต้อง"""
 def parse_descriptor(value):
     if not isinstance(value, (list, tuple)) or len(value) != DESCRIPTOR_LENGTH:
-        raise FaceDataError("descriptor ต้องมี 128 ค่า")
+        raise FaceDataError("descriptor need word 128")
     result = []
     for item in value:
         if isinstance(item, bool) or not isinstance(item, (int, float)):
-            raise FaceDataError("descriptor ต้องเป็นตัวเลข")
+            raise FaceDataError("descriptor is number")
         if not math.isfinite(item) or abs(item) > 10:
-            raise FaceDataError("ค่า descriptor ผิดปกติ")
+            raise FaceDataError("Value descriptor error")
         result.append(float(item))
     if sum(x * x for x in result) < 1e-6:
-        raise FaceDataError("descriptor ว่างเปล่า")
+        raise FaceDataError("descriptor free")
     return result
 
 
@@ -40,27 +40,27 @@ def is_same_person(distance):
 
 def photo_from_data_url(data_url):
     if not isinstance(data_url, str) or not data_url.startswith("data:image/") or "," not in data_url:
-        raise FaceDataError("รูปภาพไม่ถูกต้อง")
+        raise FaceDataError("Image error")
     _, _, b64 = data_url.partition(",")
     try:
         raw = base64.b64decode(b64, validate=True)
     except (binascii.Error, ValueError):
-        raise FaceDataError("รูปภาพไม่ถูกต้อง")
+        raise FaceDataError("Image Error")
     if not raw or len(raw) > MAX_PHOTO_BYTES:
-        raise FaceDataError("ไฟล์รูปว่างหรือใหญ่เกินไป")
+        raise FaceDataError("file image don't have or too large")
 
     try:
         probe = Image.open(BytesIO(raw))
         if probe.format not in ("JPEG", "PNG"):
-            raise FaceDataError("รองรับเฉพาะรูป JPEG/PNG")
+            raise FaceDataError("Support image is JPEG/PNG")
         if probe.width * probe.height > MAX_PHOTO_PIXELS:
-            raise FaceDataError("รูปมีขนาดใหญ่เกินไป")
+            raise FaceDataError("Image so too large")
         probe.verify() 
         image = Image.open(BytesIO(raw)).convert("RGB")  
     except FaceDataError:
         raise
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
-        raise FaceDataError("เปิดไฟล์รูปไม่ได้")
+        raise FaceDataError("Cannot file image")
 
     image.thumbnail((SAVED_PHOTO_MAX_SIDE, SAVED_PHOTO_MAX_SIDE))
     buffer = BytesIO()

@@ -1,24 +1,14 @@
-"""
-กันการเดารหัส: ถ้าล็อกอินผิดเกินกำหนด ให้ล็อกชั่วคราว
-
-นับแยกตาม "ชื่อที่พิมพ์" (ไม่ว่าชื่อนั้นจะมีอยู่ในระบบหรือไม่ก็ตาม)
-จึงไม่ทำให้คนภายนอกรู้ได้ว่าชื่อไหนมีอยู่จริง
-"""
 from datetime import timedelta
-
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-
 from .models import LoginThrottle
-
 
 def throttle_key(name):
     return name.casefold()[:60]
 
 
 def lock_seconds_left(key):
-    """คืนจำนวนวินาทีที่ยังถูกล็อกอยู่ (0 = ไม่ถูกล็อก)"""
     row = LoginThrottle.objects.filter(key=key).first()
     if row and row.locked_until:
         left = (row.locked_until - timezone.now()).total_seconds()
@@ -26,15 +16,13 @@ def lock_seconds_left(key):
             return int(left) + 1
     return 0
 
-
 def record_failure(key):
-    """บันทึกว่าผิด 1 ครั้ง และล็อกถ้าครบกำหนด"""
     now = timezone.now()
     window = timedelta(minutes=settings.LOGIN_FAIL_WINDOW_MINUTES)
     with transaction.atomic():
         row, _ = LoginThrottle.objects.select_for_update().get_or_create(key=key)
         if now - row.updated_at > window:
-            row.failed_count = 0  # ผิดครั้งก่อนนานแล้ว เริ่มนับใหม่
+            row.failed_count = 0 
         row.failed_count += 1
         row.updated_at = now
         if row.failed_count >= settings.LOGIN_MAX_FAILED_ATTEMPTS:
@@ -44,5 +32,4 @@ def record_failure(key):
 
 
 def reset(key):
-    """ล็อกอินสำเร็จ ล้างตัวนับ"""
     LoginThrottle.objects.filter(key=key).delete()

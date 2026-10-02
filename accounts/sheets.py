@@ -12,7 +12,7 @@ from .models import LoginLog
 
 logger = logging.getLogger(__name__)
 
-HEADER_ROW = ["วันที่-เวลา", "ชื่อ-นามสกุล", "ชื่อเล่น", "รหัสสมาชิก"]
+HEADER_ROW = ["Day-time", "Name-lastname", "Nickname", "password"]
 STUCK_AFTER = timedelta(minutes=5) 
 
 _worker_lock = threading.Lock() 
