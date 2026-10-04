@@ -1,0 +1,47 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Record sale{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="panel">
+        <h1 class="h4 mb-1">Record sale</h1>
+        <p class="lead-note">
+          {{ log.person.full_name|default:log.attempted_name }}
+          {% if log.person %}— Member ID {{ log.person.member_code }}{% endif %}
+          <br>Signed in at {{ log.created_at|date:"j F Y H:i:s" }}
+        </p>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.amount.id_for_label }}">Amount (baht)</label>
+            {{ form.amount }}
+            {% for error in form.amount.errors %}
+              <div class="field-error">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label d-block">Payment method</label>
+            {% for radio in form.payment_method %}
+              <div class="form-check form-check-inline">
+                {{ radio.tag }}
+                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+              </div>
+            {% endfor %}
+            {% for error in form.payment_method.errors %}
+              <div class="field-error">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a class="btn btn-outline-secondary" href="{% url 'counter_queue' %}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

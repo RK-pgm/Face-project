@@ -1,8 +1,4 @@
-/*
- * หน้าล็อกอิน: กรอกชื่อ + PIN แล้วสแกนหน้า
- * เบราว์เซอร์สกัด descriptor จากวิดีโอ ณ วินาทีที่กดปุ่ม แล้วส่ง {name, pin, descriptor} ไปให้ Django ตัดสิน
- * (ตัวตัดสินผ่าน/ไม่ผ่านอยู่ที่เซิร์ฟเวอร์ ไม่ใช่ในเบราว์เซอร์)
- */
+
 (function () {
   "use strict";
   const FL = window.FaceLogin;
@@ -18,8 +14,8 @@
   const resultBox = document.getElementById("result");
 
   let stream = null;
-  let ready = false;   // โมเดลและกล้องพร้อมแล้ว
-  let busy = false;    // กำลังส่งข้อมูล
+  let ready = false;   
+  let busy = false;    
 
   function showResult(text) {
     resultBox.textContent = text;
@@ -30,7 +26,7 @@
     submitBtn.disabled = !ready || busy;
   }
 
-  // PIN รับเฉพาะตัวเลข
+  
   pinInput.addEventListener("input", function () {
     pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, 6);
   });
@@ -41,7 +37,7 @@
       stream = await FL.startCamera(video);
     } catch (err) {
       console.error(err);
-      placeholder.textContent = "เปิดกล้องไม่ได้";
+      placeholder.textContent = "Could not open the camera";
       FL.setStatus(statusEl, "error", FL.cameraErrorMessage(err));
       return;
     }
@@ -51,9 +47,9 @@
 
     FL.watchFaces(video, overlay, function (count) {
       if (busy) { return; }
-      if (count === 1) { FL.setLiveStatus(statusEl, "ok", "พบใบหน้า พร้อมสแกน"); }
-      else if (count === 0) { FL.setLiveStatus(statusEl, "warn", "ไม่พบใบหน้า — ให้ใบหน้าอยู่กลางกรอบ"); }
-      else { FL.setLiveStatus(statusEl, "warn", "พบหลายใบหน้า — ให้เหลือเพียงคนเดียว"); }
+      if (count === 1) { FL.setLiveStatus(statusEl, "ok", "Face detected. Ready to scan."); }
+      else if (count === 0) { FL.setLiveStatus(statusEl, "warn", "No face detected. Center your face in the frame."); }
+      else { FL.setLiveStatus(statusEl, "warn", "Multiple faces detected. Only one person should be in the frame."); }
     });
   }
 
@@ -65,18 +61,18 @@
     const name = nameInput.value.trim();
     const pin = pinInput.value;
     if (!name || !/^\d{4,6}$/.test(pin)) {
-      showResult("กรุณากรอกชื่อและรหัสตัวเลข 4-6 หลักให้ครบ");
+      showResult("Enter your name and a 4–6 digit PIN.");
       return;
     }
 
     busy = true;
     refreshButton();
-    FL.setStatus(statusEl, "idle", "กำลังสแกนใบหน้า…");
+    FL.setStatus(statusEl, "idle", "Scanning face…");
 
     try {
       const face = await FL.extractSingleDescriptor(video, video.videoWidth);
       if (face.error) {
-        // ไม่เจอหน้าเดียวที่ชัดเจน → เตือนและ "ไม่ส่งข้อมูล" ไปเซิร์ฟเวอร์
+        
         FL.setStatus(statusEl, "warn", FL.faceErrorText(face.error), 4000);
         return;
       }
@@ -84,16 +80,16 @@
       const res = await FL.postJson("/login/", { name: name, pin: pin, descriptor: face.descriptor });
       if (res.ok && res.body && res.body.ok) {
         FL.stopCamera(stream);
-        FL.setStatus(statusEl, "ok", "เข้าสู่ระบบสำเร็จ กำลังพาไปหน้าของคุณ…");
+        FL.setStatus(statusEl, "ok", "Sign-in successful. Redirecting to your dashboard…");
         window.location.href = res.body.redirect;
         return;
       }
-      showResult((res.body && res.body.message) || "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่");
+      showResult((res.body && res.body.message) || "Sign-in failed. Please try again.");
       pinInput.value = "";
       pinInput.focus();
     } catch (err) {
       console.error(err);
-      showResult("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบว่า runserver ยังทำงานอยู่");
+      showResult("Could not connect to the server. Check that the server is running.");
     } finally {
       busy = false;
       refreshButton();

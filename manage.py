@@ -8,7 +8,7 @@ def main():
         from django.core.management import execute_from_command_line
     except ImportError as exc:
         raise ImportError(
-            "ไม่พบ Django — ลืมเปิด venv หรือยังไม่ได้ pip install -r requirements.txt หรือเปล่า?"
+            "Django is not installed. Activate the virtual environment and run pip install -r requirements.txt."
         ) from exc
     execute_from_command_line(sys.argv)
 

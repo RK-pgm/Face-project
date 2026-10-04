@@ -11,16 +11,16 @@
   const retakeBtn = document.getElementById("retake-btn");
   const snapshotWrap = document.getElementById("snapshot-wrap");
   const snapshotImg = document.getElementById("snapshot");
-  const form = document.getElementById("register-form");
+  const form = document.getElementById("change-face-form");
   const submitBtn = document.getElementById("submit-btn");
-  const consent = document.getElementById("consent");
+  const pinInput = document.getElementById("pin");
 
   let stream = null;
   let stopWatching = null;
   let liveFaceCount = 0;
   let capturing = false;
   let submitting = false;
-  const captured = { descriptor: null, photo: null }; 
+  const captured = { descriptor: null, photo: null };
 
   function fieldError(name, text) {
     const el = document.querySelector('[data-error-for="' + name + '"]');
@@ -34,15 +34,12 @@
   function refreshButtons() {
     const hasPhoto = !!captured.descriptor;
     captureBtn.disabled = !stream || hasPhoto || capturing || liveFaceCount !== 1;
-    submitBtn.disabled = !(hasPhoto && consent.checked) || submitting;
+    submitBtn.disabled = !hasPhoto || submitting;
   }
 
-  
-  ["pin", "pin_confirm"].forEach(function (id) {
-    const el = document.getElementById(id);
-    el.addEventListener("input", function () { el.value = el.value.replace(/\D/g, "").slice(0, 6); });
+  pinInput.addEventListener("input", function () {
+    pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, 6);
   });
-  consent.addEventListener("change", refreshButtons);
 
   async function init() {
     try {
@@ -62,7 +59,7 @@
     stopWatching = FL.watchFaces(video, overlay, function (count) {
       liveFaceCount = count;
       if (!captured.descriptor && !capturing) {
-        if (count === 1) { FL.setLiveStatus(statusEl, "ok", "One face detected. You can capture a photo now."); }
+        if (count === 1) { FL.setLiveStatus(statusEl, "ok", "One face detected. You can capture a new photo now."); }
         else if (count === 0) { FL.setLiveStatus(statusEl, "warn", "No face detected. Center your face and make sure there is enough light."); }
         else { FL.setLiveStatus(statusEl, "warn", "Multiple faces detected. Only one person should be in the frame."); }
       }
@@ -76,7 +73,6 @@
     refreshButtons();
     FL.setStatus(statusEl, "idle", "Analyzing face…");
     try {
-      
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -84,7 +80,6 @@
 
       const face = await FL.extractSingleDescriptor(canvas, canvas.width);
       if (face.error) {
-        
         FL.setStatus(statusEl, "warn", FL.faceErrorText(face.error), 4000);
         return;
       }
@@ -94,7 +89,7 @@
       snapshotWrap.hidden = false;
       retakeBtn.hidden = false;
       fieldError("face", "");
-      FL.setStatus(statusEl, "ok", "Photo captured. One face detected. Complete the form and register.");
+      FL.setStatus(statusEl, "ok", "Photo captured. One face detected. Enter your PIN and save.");
     } catch (err) {
       console.error(err);
       FL.setStatus(statusEl, "error", "Face analysis failed. Please try again.", 4000);
@@ -119,12 +114,7 @@
     clearErrors();
 
     const payload = {
-      first_name: document.getElementById("first_name").value,
-      last_name: document.getElementById("last_name").value,
-      nickname: document.getElementById("nickname").value,
-      pin: document.getElementById("pin").value,
-      pin_confirm: document.getElementById("pin_confirm").value,
-      consent: consent.checked,
+      pin: pinInput.value,
       descriptor: captured.descriptor,
       photo: captured.photo,
     };
@@ -132,14 +122,18 @@
     submitting = true;
     refreshButtons();
     try {
-      const res = await FL.postJson("/register/", payload);
+      const res = await FL.postJson("/me/change-face/", payload);
       if (res.ok && res.body && res.body.ok) {
         FL.stopCamera(stream);
-        window.location.href = res.body.redirect; 
+        window.location.href = res.body.redirect;
         return;
       }
-      const errors = (res.body && res.body.errors) || { __all__: "Registration failed. Please try again." };
-      Object.keys(errors).forEach(function (field) { fieldError(field, errors[field]); });
+      if (res.status === 429 && res.body) {
+        fieldError("__all__", res.body.message);
+      } else {
+        const errors = (res.body && res.body.errors) || { __all__: "Could not update your face photo. Please try again." };
+        Object.keys(errors).forEach(function (field) { fieldError(field, errors[field]); });
+      }
     } catch (err) {
       console.error(err);
       fieldError("__all__", "Could not connect to the server. Check that the server is running.");

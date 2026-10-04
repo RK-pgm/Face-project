@@ -1,52 +1,107 @@
 {% extends "accounts/base.html" %}
-{% block title %}หน้าของฉัน{% endblock %}
+
+{% block title %}My dashboard{% endblock %}
 
 {% block content %}
-<div class="panel mb-4">
-  <div class="row g-4 align-items-center">
-    <div class="col-sm-auto text-center">
-      <img class="profile-photo" src="{% url 'my_photo' %}" alt="รูปหน้าของ {{ person.nickname }}">
-    </div>
-    <div class="col-sm">
-      <h1 class="h3 mb-1">{{ person.first_name }} {{ person.last_name }}</h1>
-      <p class="mb-2 fs-5">Nickname: {{ person.nickname }}</p>
-      <p class="mb-1">Password memmer: <span class="member-code">{{ person.member_code }}</span></p>
-      <p class="mb-1">Last login: {{ last_login|date:"j F Y H:i" }} น.</p>
-      {% if previous_login %}
-        <p class="mb-0 lead-note">Previous time: {{ previous_login|date:"j F Y H:i" }} น.</p>
-      {% endif %}
-    </div>
-    <div class="col-sm-auto">
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-secondary">Log out</button>
-      </form>
-    </div>
-  </div>
-</div>
+  <div class="panel mb-4">
+    <div class="row g-4 align-items-center">
+      <div class="col-sm-auto text-center">
+        <img class="profile-photo" src="{% url 'my_photo' %}" alt="Photo of {{ person.nickname }}">
+      </div>
 
-<div class="panel">
-  <h2 class="h5">History log in.</h2>
-  <p class="lead-note">The previous 30 login attempts are displayed, including unsuccessful ones. If any of these were not made by you, please notify the administrator.</p>
-  <div class="table-responsive">
-    <table class="table align-middle mb-0">
-      <thead>
-        <tr><th scope="col">Day-time</th><th scope="col">ผลลัพธ์</th></tr>
-      </thead>
-      <tbody>
-      {% for log in logs %}
-        <tr>
-          <td>{{ log.created_at|date:"j F Y H:i:s" }}</td>
-          <td>
-            {% if log.success %}<span class="badge badge-ok">Comlete</span>
-            {% else %}<span class="badge badge-fail">INcomplete</span>{% endif %}
-          </td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="2" class="text-muted">Don't have history</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
+      <div class="col-sm">
+        <h1 class="h3 mb-1">{{ person.first_name }} {{ person.last_name }}</h1>
+        <p class="mb-2 fs-5">Nickname: {{ person.nickname }}</p>
+        <p class="mb-1">Member ID: <span class="member-code">{{ person.member_code }}</span></p>
+        <p class="mb-1">Last sign-in: {{ last_login|date:"j F Y H:i" }}</p>
+        {% if previous_login %}
+          <p class="mb-0 lead-note">Previous sign-in: {{ previous_login|date:"j F Y H:i" }}</p>
+        {% endif %}
+      </div>
+
+      <div class="col-sm-auto d-flex flex-column gap-2">
+        <a href="{% url 'change_face' %}" class="btn btn-outline-primary">Change face photo</a>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-secondary w-100">Sign out</button>
+        </form>
+      </div>
+    </div>
   </div>
-</div>
+
+  <div class="panel mb-4">
+    <h2 class="h5">Payment for this visit</h2>
+    {% if active_log %}
+      <p class="lead-note">Sign-in time: {{ active_log.created_at|date:"j F Y H:i:s" }}</p>
+      <form method="post" action="{% url 'dashboard' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label" for="{{ sale_form.amount.id_for_label }}">Amount to pay (baht)</label>
+          {{ sale_form.amount }}
+          {% for error in sale_form.amount.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+        <fieldset class="mb-3">
+          <legend class="form-label">Payment method</legend>
+          {% for radio in sale_form.payment_method %}
+            <div class="form-check form-check-inline">
+              {{ radio.tag }}
+              <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+            </div>
+          {% endfor %}
+          {% for error in sale_form.payment_method.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </fieldset>
+        <button type="submit" class="btn btn-success">Save payment</button>
+      </form>
+    {% else %}
+      <p class="lead-note mb-0">Sign in again to record payment for a new visit.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <h2 class="h5">Sign-in history</h2>
+    <p class="lead-note">
+      Showing your 30 most recent sign-in attempts, including failures. Contact an administrator if you see an attempt you did not make.
+    </p>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Date and time</th>
+            <th scope="col">Sign-out time</th>
+            <th scope="col">Result</th>
+            <th scope="col">Purchase</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td>{{ log.created_at|date:"j F Y H:i:s" }}</td>
+              <td>{{ log.logged_out_at|date:"j F Y H:i:s"|default:"—" }}</td>
+              <td>
+                {% if log.success %}
+                  <span class="badge badge-ok">Successful</span>
+                {% else %}
+                  <span class="badge badge-fail">Failed</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if log.amount is not None %}
+                  {{ log.amount }} baht ({{ log.get_payment_method_display }})
+                {% elif log.success %}
+                  <span class="lead-note small">Amount not recorded</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-muted">No history yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 {% endblock %}

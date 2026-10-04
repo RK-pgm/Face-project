@@ -1,90 +1,107 @@
 {% extends "accounts/base.html" %}
 {% load static %}
-{% block title %}สมัครสมาชิก{% endblock %}
+
+{% block title %}Register{% endblock %}
 
 {% block content %}
-<div class="row g-4 align-items-start">
-  <div class="col-md-6">
-    {% include "accounts/_camera.html" %}
+  <div class="row g-4 align-items-start">
+    <div class="col-md-6">
+      {% include "accounts/_camera.html" %}
 
-    <div class="d-flex gap-2 mt-3">
-      <button class="btn btn-primary" id="capture-btn" type="button" disabled>Take photo</button>
-      <button class="btn btn-outline-secondary" id="retake-btn" type="button" hidden>Take photo again</button>
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-primary" id="capture-btn" type="button" disabled>
+          Capture face photo
+        </button>
+        <button class="btn btn-outline-secondary" id="retake-btn" type="button" hidden>
+          Retake
+        </button>
+      </div>
+
+      <div id="snapshot-wrap" class="mt-3" hidden>
+        <p class="mb-1 fw-semibold">Registration photo</p>
+        <img id="snapshot" class="snapshot" alt="Captured face photo">
+      </div>
+      <div class="field-error mt-2" data-error-for="face"></div>
     </div>
 
-    <div id="snapshot-wrap" class="mt-3" hidden>
-      <p class="mb-1 fw-semibold">รูปที่จะใช้สมัคร</p>
-      <img id="snapshot" class="snapshot" alt="รูปหน้าที่ถ่ายไว้">
+    <div class="col-md-6">
+      <div class="panel">
+        <h1 class="h4 mb-1">Register</h1>
+        <p class="lead-note">
+          Capture a clear photo showing only your face, then complete the form below.
+        </p>
+
+        <form id="register-form" novalidate>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="first_name">First name</label>
+              <input class="form-control" id="first_name" name="first_name" maxlength="50" autocomplete="off" required>
+              <div class="field-error" data-error-for="first_name"></div>
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label" for="last_name">Last name</label>
+              <input class="form-control" id="last_name" name="last_name" maxlength="50" autocomplete="off" required>
+              <div class="field-error" data-error-for="last_name"></div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="nickname">Nickname</label>
+              <input class="form-control" id="nickname" name="nickname" maxlength="30" autocomplete="off" required>
+              <div class="field-error" data-error-for="nickname"></div>
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label" for="pin">PIN (4–6 digits)</label>
+              <input class="form-control" id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" required>
+              <div class="field-error" data-error-for="pin"></div>
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label" for="pin_confirm">Confirm PIN</label>
+              <input class="form-control" id="pin_confirm" name="pin_confirm" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" required>
+              <div class="field-error" data-error-for="pin_confirm"></div>
+            </div>
+          </div>
+
+          <div class="consent-box mt-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="consent" name="consent">
+              <label class="form-check-label" for="consent">
+                I consent to storing my face photo and face descriptor to verify my identity when I sign in.
+              </label>
+            </div>
+
+            <details class="mt-2">
+              <summary>Data we store and your rights</summary>
+              <ul class="mb-0 mt-2 ps-3">
+                <li>Stored: name, nickname, face photo, face descriptor, hashed PIN, and sign-in history.</li>
+                <li>Your name, nickname, member ID, and successful sign-in times are saved to a Google Sheet accessible only to the system owner.</li>
+                <li>You may request deletion of your data at any time by contacting the administrator.</li>
+              </ul>
+            </details>
+            <div class="field-error" data-error-for="consent"></div>
+          </div>
+
+          <div class="field-error mt-2" data-error-for="__all__"></div>
+          <button class="btn btn-primary w-100 mt-3" id="submit-btn" type="submit" disabled>
+            Register
+          </button>
+          <p class="mt-2 mb-0 lead-note small">
+            Capture a photo and give consent to continue.
+          </p>
+        </form>
+
+        <p class="mt-3 mb-0 lead-note">
+          Already registered? <a href="{% url 'login' %}">Sign in</a>
+        </p>
+      </div>
     </div>
-    <div class="field-error mt-2" data-error-for="face"></div>
   </div>
-
-  <div class="col-md-6">
-    <div class="panel">
-      <h1 class="h4 mb-1">Sing in</h1>
-      <p class="lead-note">Take a clear photo showing only your face, then fill in the information below.</p>
-
-      <form id="register-form" novalidate>
-        <div class="row g-3">
-          <div class="col-sm-6">
-            <label class="form-label" for="first_name">Name</label>
-            <input class="form-control" id="first_name" name="first_name" maxlength="50" autocomplete="off" required>
-            <div class="field-error" data-error-for="first_name"></div>
-          </div>
-          <div class="col-sm-6">
-            <label class="form-label" for="last_name">Last name</label>
-            <input class="form-control" id="last_name" name="last_name" maxlength="50" autocomplete="off" required>
-            <div class="field-error" data-error-for="last_name"></div>
-          </div>
-          <div class="col-12">
-            <label class="form-label" for="nickname">Nickename</label>
-            <input class="form-control" id="nickname" name="nickname" maxlength="30" autocomplete="off" required>
-            <div class="field-error" data-error-for="nickname"></div>
-          </div>
-          <div class="col-sm-6">
-            <label class="form-label" for="pin">Password 4-6 digits</label>
-            <input class="form-control" id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" required>
-            <div class="field-error" data-error-for="pin"></div>
-          </div>
-          <div class="col-sm-6">
-            <label class="form-label" for="pin_confirm">Confirm the numeric code.</label>
-            <input class="form-control" id="pin_confirm" name="pin_confirm" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" required>
-            <div class="field-error" data-error-for="pin_confirm"></div>
-          </div>
-        </div>
-
-        <div class="consent-box mt-3">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="consent" name="consent">
-            <label class="form-check-label" for="consent">
-              ข้าพเจ้ายินยอมให้เก็บรูปถ่ายใบหน้าและค่าตัวเลขลักษณะใบหน้า (face descriptor)
-              เพื่อใช้ยืนยันตัวตนตอนเข้าสู่ระบบนี้เท่านั้น
-            </label>
-          </div>
-          <details class="mt-2">
-            <summary>ข้อมูลที่ระบบเก็บและสิทธิ์ของคุณ</summary>
-            <ul class="mb-0 mt-2 ps-3">
-              <li>Stored data: First name, last name, nickname, face image, descriptor values, numeric ID (stored as a hash), and access history.</li>
-              <li>Names, nicknames, member IDs, and successful login times will be recorded in a Google Sheet accessible only to the system owner.</li>
-              <li>You may request the deletion of all data at any time by notifying the administrator.</li>
-            </ul>
-          </details>
-          <div class="field-error" data-error-for="consent"></div>
-        </div>
-
-        <div class="field-error mt-2" data-error-for="__all__"></div>
-        <button class="btn btn-primary w-100 mt-3" id="submit-btn" type="submit" disabled>สมัครสมาชิก</button>
-        <p class="mt-2 mb-0 lead-note small">The button can be pressed only after taking a photo of your face and checking the consent box.</p>
-      </form>
-
-      <p class="mt-3 mb-0 lead-note">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
-    </div>
-  </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'vendor/face-api/face-api.js' %}"></script>
-<script src="{% static 'accounts/js/common.js' %}"></script>
-<script src="{% static 'accounts/js/register.js' %}"></script>
+  <script src="{% static 'vendor/face-api/face-api.js' %}"></script>
+  <script src="{% static 'accounts/js/common.js' %}"></script>
+  <script src="{% static 'accounts/js/register.js' %}"></script>
 {% endblock %}

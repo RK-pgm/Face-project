@@ -1,8 +1,4 @@
-/* ==========================================================================
-   สไตล์ของระบบล็อกอินด้วยใบหน้า
-   วางทับ Bootstrap: โทนเขียวเข้ม พื้นหลังเทาอมเขียวอ่อน ตัวอักษร Sarabun (ฟอนต์ไทย)
-   ฟอนต์ถูกเก็บไว้ใน static/fonts จึงใช้งานได้แม้ไม่มีอินเทอร์เน็ต
-   ========================================================================== */
+
 
 @font-face {
   font-family: "Sarabun"; font-style: normal; font-weight: 400; font-display: swap;
@@ -48,7 +44,7 @@
 }
 
 html { font-size: 17px; }
-body { line-height: 1.7; }  /* ภาษาไทยมีสระ/วรรณยุกต์ซ้อนกัน ต้องเว้นบรรทัดให้โปร่ง */
+body { line-height: 1.7; }  
 h1, h2, h3, h4 { font-weight: 600; line-height: 1.4; }
 
 .btn { font-weight: 600; padding: .55rem 1.1rem; border-radius: .6rem; }
@@ -68,7 +64,7 @@ h1, h2, h3, h4 { font-weight: 600; line-height: 1.4; }
 .field-error { color: var(--danger); font-size: .9rem; margin-top: .25rem; min-height: 0; }
 .field-error:empty { display: none; }
 
-/* ---------- แถบด้านบน ---------- */
+
 .site-bar { background: var(--card); border-bottom: 1px solid var(--line); }
 .site-bar .brand { font-weight: 600; color: var(--brand-dark); text-decoration: none; font-size: 1.1rem; }
 .site-bar a.nav-link { color: var(--ink); }
@@ -81,14 +77,14 @@ h1, h2, h3, h4 { font-weight: 600; line-height: 1.4; }
 }
 .lead-note { color: var(--muted); }
 
-/* ---------- กล้อง ---------- */
+
 .camera-frame {
   position: relative; width: 100%; aspect-ratio: 4 / 3; background: #10201a;
   border-radius: 1rem; overflow: hidden;
 }
-/* กลับภาพซ้าย-ขวาให้เหมือนส่องกระจก (เฉพาะการแสดงผล ไม่กระทบภาพที่ส่งไปเก็บ) */
+
 .camera-frame video, .camera-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
-/* มุมทั้งสี่บอกตำแหน่งที่ควรให้ใบหน้าอยู่ */
+
 .camera-frame::before, .camera-frame::after {
   content: ""; position: absolute; inset: 12% 22%; pointer-events: none; z-index: 2; opacity: .85;
   --c: rgba(255, 255, 255, .9); --l: 28px; --t: 3px;
@@ -121,7 +117,7 @@ h1, h2, h3, h4 { font-weight: 600; line-height: 1.4; }
 
 .snapshot { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 1rem; border: 3px solid var(--brand); }
 
-/* ---------- ข้อความแจ้งผลตอนล็อกอิน/สมัคร ---------- */
+
 .result-box { border-radius: .6rem; padding: .6rem .9rem; font-weight: 600; }
 .result-box[hidden] { display: none; }
 .result-box.error { background: var(--danger-soft); color: var(--danger); }
@@ -129,7 +125,7 @@ h1, h2, h3, h4 { font-weight: 600; line-height: 1.4; }
 
 .consent-box { background: #f7faf8; border: 1px solid var(--line); border-radius: .6rem; padding: .8rem 1rem; font-size: .95rem; }
 
-/* ---------- Dashboard ---------- */
+
 .profile-photo { width: 168px; height: 168px; object-fit: cover; border-radius: 50%; border: 4px solid var(--brand-soft); }
 .member-code { font-family: Consolas, "Courier New", monospace; letter-spacing: .06em; background: var(--brand-soft); color: var(--brand-dark); padding: .1rem .55rem; border-radius: .4rem; font-weight: 700; }
 .badge-ok { background: var(--brand-soft); color: var(--brand-dark); font-weight: 600; }

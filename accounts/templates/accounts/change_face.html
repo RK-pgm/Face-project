@@ -1,0 +1,61 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+
+{% block title %}Change face photo{% endblock %}
+
+{% block content %}
+  <div class="row g-4 align-items-start">
+    <div class="col-md-6">
+      {% include "accounts/_camera.html" %}
+
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-primary" id="capture-btn" type="button" disabled>
+          Capture new photo
+        </button>
+        <button class="btn btn-outline-secondary" id="retake-btn" type="button" hidden>
+          Retake
+        </button>
+      </div>
+
+      <div id="snapshot-wrap" class="mt-3" hidden>
+        <p class="mb-1 fw-semibold">New photo</p>
+        <img id="snapshot" class="snapshot" alt="Captured face photo">
+      </div>
+      <div class="field-error mt-2" data-error-for="face"></div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="panel">
+        <h1 class="h4 mb-1">Change face photo</h1>
+        <p class="lead-note">
+          Capture a clear photo showing only your face, then enter your current PIN to confirm your identity.
+          Your current face photo and descriptor will be replaced immediately.
+        </p>
+
+        <form id="change-face-form" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="pin">Current PIN</label>
+            <input class="form-control" id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" required>
+            <div class="field-error" data-error-for="pin"></div>
+          </div>
+
+          <div class="field-error mt-2" data-error-for="__all__"></div>
+          <button class="btn btn-primary w-100 mt-3" id="submit-btn" type="submit" disabled>
+            Save new photo
+          </button>
+          <p class="mt-2 mb-0 lead-note small">Capture a new photo before submitting.</p>
+        </form>
+
+        <p class="mt-3 mb-0 lead-note">
+          <a href="{% url 'dashboard' %}">Cancel and return to my dashboard</a>
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'vendor/face-api/face-api.js' %}"></script>
+  <script src="{% static 'accounts/js/common.js' %}"></script>
+  <script src="{% static 'accounts/js/change_face.js' %}"></script>
+{% endblock %}

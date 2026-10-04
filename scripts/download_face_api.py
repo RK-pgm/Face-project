@@ -20,12 +20,12 @@ def main():
         try:
             with urllib.request.urlopen(f"{BASE}/{remote}", timeout=60) as response:
                 data = response.read()
-        except Exception as exc:  
-            print(f"False: {exc}")
+        except Exception as exc:
+            print(f"Failed: {exc}")
             sys.exit(1)
         local.write_bytes(data)
-        print(f"Complete ({len(data) / 1024:.0f} KB)")
-    print("Compelte file at", TARGET)
+        print(f"Done ({len(data) / 1024:.0f} KB)")
+    print("Done. Files are in", TARGET)
 
 
 if __name__ == "__main__":

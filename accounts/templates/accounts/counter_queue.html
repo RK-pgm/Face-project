@@ -1,0 +1,74 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Counter{% endblock %}
+
+{% block content %}
+  <div class="panel mb-4">
+    <h1 class="h4 mb-1">Counter — {{ today|date:"j F Y" }}</h1>
+    <p class="lead-note">
+      Successful sign-ins today without a recorded sale. Select “Record sale” to enter the amount and payment method.
+    </p>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Time</th>
+            <th scope="col">Name</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in pending %}
+            <tr>
+              <td>{{ log.created_at|date:"H:i:s" }}</td>
+              <td>
+                {{ log.person.full_name|default:log.attempted_name }}
+                {% if log.person %}<span class="member-code">{{ log.person.member_code }}</span>{% endif %}
+              </td>
+              <td class="text-end">
+                <a class="btn btn-primary btn-sm" href="{% url 'record_sale' log.id %}">Record sale</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3" class="text-muted">No sales waiting to be recorded.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 class="h5">Recorded today (latest 20)</h2>
+    <p class="lead-note">Select an entry to correct its amount or payment method.</p>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Time</th>
+            <th scope="col">Name</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Payment method</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in recorded %}
+            <tr>
+              <td>{{ log.created_at|date:"H:i:s" }}</td>
+              <td>{{ log.person.full_name|default:log.attempted_name }}</td>
+              <td>{{ log.amount }} baht</td>
+              <td>{{ log.get_payment_method_display }}</td>
+              <td class="text-end">
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'record_sale' log.id %}">Edit</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-muted">No sales have been recorded today.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

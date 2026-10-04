@@ -3,12 +3,16 @@ import json
 import random
 from io import BytesIO
 from unittest import mock
+
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
+
 from . import faces, sheets
 from .models import LoginLog, LoginThrottle, Person
+
 
 def make_descriptor(seed, noise=0.0):
     rng = random.Random(seed)
@@ -36,6 +40,8 @@ REGISTER_OK = {
     "pin": "1234", "pin_confirm": "1234", "consent": True,
 }
 
+
+
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 
@@ -47,6 +53,7 @@ class BaseCase(TestCase):
 
     def login(self, name="สมชาย", pin="1234", descriptor=None, client=None):
         descriptor = descriptor if descriptor is not None else make_descriptor(1, noise=0.005)
+
         with self.captureOnCommitCallbacks(execute=True):
             return post_json(client or self.client, reverse("login"),
                              {"name": name, "pin": pin, "descriptor": descriptor})
@@ -88,7 +95,7 @@ class RegisterTests(BaseCase):
         self.assertIn("pin_confirm", response.json()["errors"])
 
     def test_pin_sent_as_number_is_rejected(self):
-        # ถ้าส่งเป็นตัวเลข (ไม่ใช่ข้อความ) เลข 0 นำหน้าจะหาย จึงไม่รับ
+
         response = self.register(pin=1234, pin_confirm=1234)
         self.assertEqual(response.status_code, 400)
 
@@ -135,7 +142,7 @@ class RegisterTests(BaseCase):
 class LoginTests(BaseCase):
     def setUp(self):
         self.register(seed=1)
-        self.client = Client() 
+        self.client = Client()
 
     def test_success_needs_name_pin_and_face(self):
         with mock.patch("accounts.views.sheets.enqueue_sync") as enqueue:
@@ -153,18 +160,18 @@ class LoginTests(BaseCase):
     def test_wrong_pin_gives_generic_message(self):
         response = self.login(pin="9999")
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["message"], "Data incorrect")
+        self.assertEqual(response.json()["message"], "Sign-in failed.")
         self.assertEqual(self.client.get(reverse("dashboard")).status_code, 302)
 
     def test_someone_elses_face_rejected(self):
-        response = self.login(descriptor=make_descriptor(2))  # คนละใบหน้า
+        response = self.login(descriptor=make_descriptor(2))
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["message"], "Data incorrect")
+        self.assertEqual(response.json()["message"], "Sign-in failed.")
 
     def test_unknown_name_gives_same_message(self):
         response = self.login(name="ไม่มีชื่อนี้")
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json()["message"], "Data incorrect")
+        self.assertEqual(response.json()["message"], "Sign-in failed.")
 
     def test_all_failures_look_identical_to_the_client(self):
         bodies = {
@@ -194,10 +201,10 @@ class LoginTests(BaseCase):
     def test_lock_after_five_failures_then_even_correct_login_is_blocked(self):
         for _ in range(5):
             self.assertEqual(self.login(pin="0000").status_code, 401)
-        blocked = self.login()  
+        blocked = self.login()
         self.assertEqual(blocked.status_code, 429)
         self.assertTrue(blocked.json()["locked"])
-        self.assertIn("นาที", blocked.json()["message"])
+        self.assertIn("minute", blocked.json()["message"])
 
     def test_lock_expires(self):
         for _ in range(5):
@@ -206,6 +213,7 @@ class LoginTests(BaseCase):
         self.assertEqual(self.login().status_code, 200)
 
     def test_lock_also_applies_to_unknown_names(self):
+
         for _ in range(5):
             self.login(name="ผีสาง")
         self.assertEqual(self.login(name="ผีสาง").status_code, 429)
@@ -217,14 +225,14 @@ class LoginTests(BaseCase):
         self.client = Client()
         for _ in range(4):
             self.login(pin="0000")
-        self.assertEqual(self.login().status_code, 200)  
+        self.assertEqual(self.login().status_code, 200)
 
     def test_failures_are_logged_and_visible_on_dashboard(self):
         self.login(pin="0000")
         self.login()
         response = self.client.get(reverse("dashboard"))
-        self.assertContains(response, "incomplete")
-        self.assertContains(response, "complete")
+        self.assertContains(response, "Failed")
+        self.assertContains(response, "Successful")
         person = Person.objects.get()
         self.assertEqual(person.logs.filter(success=False).count(), 1)
         self.assertEqual(person.logs.get(success=False).fail_reason, "pin")
@@ -235,6 +243,7 @@ class LoginTests(BaseCase):
         self.assertEqual(Person.objects.count(), 2)
         me = Client()
         self.assertEqual(self.login(pin="7777", descriptor=make_descriptor(5, 0.005), client=me).status_code, 200)
+
         again = Client()
         self.assertEqual(self.login(pin="7777", descriptor=make_descriptor(1, 0.005), client=again).status_code, 401)
 
@@ -285,7 +294,8 @@ class DashboardTests(BaseCase):
         self.register(client=other, seed=9, first_name="อีกคน")
         self.login()
         mine = b"".join(self.client.get(reverse("my_photo")).streaming_content)
-        self.assertTrue(mine.startswith(b"\xff\xd8")) 
+        self.assertTrue(mine.startswith(b"\xff\xd8"))
+
         self.assertEqual(self.client.get("/me/photo/?id=2").status_code, 200)
 
     def test_logout_is_post_only_and_clears_session(self):
@@ -304,6 +314,173 @@ class DashboardTests(BaseCase):
             response = self.client.get(reverse(name))
             self.assertEqual(response.status_code, 200)
             self.assertContains(response, 'name="csrf-token"')
+
+
+class ChangeFaceTests(BaseCase):
+    def setUp(self):
+        self.register(seed=1)
+        self.client = Client()
+        self.login()
+
+    def change_face(self, pin="1234", seed=2, client=None):
+        return post_json(client or self.client, reverse("change_face"), {
+            "pin": pin, "descriptor": make_descriptor(seed), "photo": make_photo_data_url(),
+        })
+
+    def test_requires_login(self):
+        response = Client().get(reverse("change_face"))
+        self.assertRedirects(response, reverse("login"), fetch_redirect_response=False)
+
+    def test_page_renders_when_logged_in(self):
+        response = self.client.get(reverse("change_face"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_wrong_pin_is_rejected_and_face_unchanged(self):
+        before = Person.objects.get().face_descriptor
+        response = self.change_face(pin="9999")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("pin", response.json()["errors"])
+        self.assertEqual(Person.objects.get().face_descriptor, before)
+
+    def test_correct_pin_updates_descriptor_and_replaces_photo(self):
+        person = Person.objects.get()
+        old_photo_name = person.face_photo.name
+        response = self.change_face(seed=42)
+        self.assertEqual(response.status_code, 200)
+        person.refresh_from_db()
+        self.assertEqual(person.face_descriptor, make_descriptor(42))
+        self.assertNotEqual(person.face_photo.name, old_photo_name)
+        self.assertFalse(person.face_photo.storage.exists(old_photo_name))
+
+    def test_new_face_can_log_in_afterwards(self):
+        self.change_face(seed=42)
+        self.client.post(reverse("logout"))
+        response = self.login(descriptor=make_descriptor(42, noise=0.005))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["ok"])
+
+    def test_bad_pin_attempts_lock_out(self):
+        for _ in range(5):
+            self.change_face(pin="0000")
+        response = self.change_face(pin="1234")
+        self.assertEqual(response.status_code, 429)
+        self.assertTrue(response.json()["locked"])
+        self.assertEqual(
+            Person.objects.get().face_descriptor,
+            make_descriptor(1),
+        )
+
+    def test_invalid_face_data_is_rejected(self):
+        response = post_json(self.client, reverse("change_face"), {"pin": "1234", "descriptor": [1, 2], "photo": "x"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("face", response.json()["errors"])
+
+
+@override_settings(PASSWORD_HASHERS=FAST_HASHERS)
+class CounterTests(BaseCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.register(seed=1)
+        self.login()
+        self.log = LoginLog.objects.get(success=True)
+        self.client.post(reverse("logout"))
+
+        User = get_user_model()
+        self.staff = User.objects.create_user("mae", password="staffpass123", is_staff=True)
+        self.staff_client = Client()
+        self.staff_client.login(username="mae", password="staffpass123")
+
+    def test_anonymous_cannot_reach_counter_or_report(self):
+        for name, args in (("counter_queue", []), ("record_sale", [self.log.id]), ("daily_report", [])):
+            response = self.client.get(reverse(name, args=args))
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/admin/login/", response["Location"])
+
+    def test_member_session_alone_cannot_reach_counter(self):
+
+        self.login()
+        response = self.client.get(reverse("counter_queue"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin/login/", response["Location"])
+
+    def test_non_staff_django_user_is_rejected(self):
+        User = get_user_model()
+        User.objects.create_user("intern", password="pass12345", is_staff=False)
+        c = Client()
+        c.login(username="intern", password="pass12345")
+        self.assertEqual(c.get(reverse("counter_queue")).status_code, 302)
+
+    def test_new_login_appears_in_pending_queue(self):
+        response = self.staff_client.get(reverse("counter_queue"))
+        self.assertContains(response, "สมชาย")
+        self.assertContains(response, "ยังไม่มีรายการที่คีย์วันนี้")
+
+    def test_record_sale_updates_log_and_leaves_queue(self):
+        response = self.staff_client.post(reverse("record_sale", args=[self.log.id]),
+                                           {"amount": "45.50", "payment_method": "cash"})
+        self.assertRedirects(response, reverse("counter_queue"))
+        self.log.refresh_from_db()
+        self.assertEqual(str(self.log.amount), "45.50")
+        self.assertEqual(self.log.payment_method, "cash")
+        self.assertEqual(self.log.recorded_by, "mae")
+        self.assertIsNotNone(self.log.recorded_at)
+
+        queue = self.staff_client.get(reverse("counter_queue"))
+        self.assertContains(queue, "No sales waiting to be recorded.")
+        self.assertFalse(LoginLog.objects.get(pk=self.log.id).needs_sale_entry)
+
+    def test_record_sale_rejects_negative_amount(self):
+        response = self.staff_client.post(reverse("record_sale", args=[self.log.id]),
+                                           {"amount": "-5", "payment_method": "cash"})
+        self.assertEqual(response.status_code, 200)
+        self.log.refresh_from_db()
+        self.assertIsNone(self.log.amount)
+
+    def test_record_sale_requires_payment_method(self):
+        response = self.staff_client.post(reverse("record_sale", args=[self.log.id]), {"amount": "10"})
+        self.assertEqual(response.status_code, 200)
+        self.log.refresh_from_db()
+        self.assertIsNone(self.log.amount)
+
+    def test_can_edit_an_already_recorded_sale(self):
+        self.staff_client.post(reverse("record_sale", args=[self.log.id]), {"amount": "10", "payment_method": "cash"})
+        self.staff_client.post(reverse("record_sale", args=[self.log.id]), {"amount": "99", "payment_method": "transfer"})
+        self.log.refresh_from_db()
+        self.assertEqual(str(self.log.amount), "99.00")
+        self.assertEqual(self.log.payment_method, "transfer")
+
+    def test_daily_report_totals(self):
+        self.staff_client.post(reverse("record_sale", args=[self.log.id]), {"amount": "30", "payment_method": "cash"})
+
+        other = Client()
+        self.register(client=other, seed=9, first_name="สมหญิง")
+        self.login(name="สมหญิง", descriptor=make_descriptor(9, noise=0.005), client=other)
+        other.post(reverse("logout"))
+        second_log = LoginLog.objects.filter(success=True).exclude(pk=self.log.id).get()
+        self.staff_client.post(reverse("record_sale", args=[second_log.id]), {"amount": "20", "payment_method": "transfer"})
+
+        response = self.staff_client.get(reverse("daily_report"))
+        self.assertEqual(response.status_code, 200)
+        ctx = response.context
+        self.assertEqual(ctx["visitor_count"], 2)
+        self.assertEqual(float(ctx["total_amount"]), 50.0)
+        by_label = {row["label"]: float(row["amount"]) for row in ctx["totals_by_method"]}
+        self.assertEqual(by_label["Cash"], 30.0)
+        self.assertEqual(by_label["Bank transfer"], 20.0)
+
+    def test_daily_report_for_other_date_is_empty(self):
+        self.staff_client.post(reverse("record_sale", args=[self.log.id]), {"amount": "30", "payment_method": "cash"})
+        response = self.staff_client.get(reverse("daily_report"), {"date": "2020-01-01"})
+        self.assertEqual(response.context["visitor_count"], 0)
+        self.assertEqual(float(response.context["total_amount"]), 0.0)
+
+    def test_member_dashboard_shows_own_purchase_amount(self):
+        self.staff_client.post(reverse("record_sale", args=[self.log.id]), {"amount": "45.5", "payment_method": "cash"})
+        self.login()
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, "45.5")
+        self.assertContains(response, "Cash")
 
 
 @override_settings(
@@ -347,12 +524,14 @@ class SheetTests(BaseCase):
         worksheet.append_row.side_effect = ConnectionError("network down")
         with mock.patch.object(sheets, "_get_worksheet", return_value=worksheet):
             response = self.login()
-        self.assertEqual(response.status_code, 200)               
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
         log = LoginLog.objects.get(success=True)
         self.assertEqual(log.sheet_status, "failed")
         self.assertEqual(log.sheet_attempts, 1)
         self.assertIn("ConnectionError", log.sheet_error)
+
+
         good = mock.MagicMock()
         with mock.patch.object(sheets, "_get_worksheet", return_value=good):
             sent, failed = sheets.sync_pending_logs()
