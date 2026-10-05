@@ -13,6 +13,7 @@ from .models import LoginLog
 
 logger = logging.getLogger(__name__)
 
+
 HEADER_ROW = ["Sign-in time", "Name", "Nickname", "Member ID", "Sign-out time", "Amount (baht)", "Payment method"]
 STUCK_AFTER = timedelta(minutes=5)
 
@@ -46,7 +47,6 @@ def _get_worksheet():
         worksheet = spreadsheet.worksheet(settings.GOOGLE_SHEET_WORKSHEET)
     else:
         worksheet = spreadsheet.sheet1
-
 
     current_header = worksheet.get("A1:G1")
     if not current_header or current_header[0] != HEADER_ROW:
@@ -103,7 +103,7 @@ def sync_pending_logs(limit=200):
                     )
                 else:
                     result = worksheet.append_row(_row_for(log), value_input_option="RAW")
-                    updated_range = result.get("updates", {}).get("updatedRange", "")
+                    updated_range = result.get("updates", {}).get("updatedRange", "") if isinstance(result, dict) else ""
                     match = re.search(r"![A-Z]+(\d+):", updated_range)
                     log.sheet_row = int(match.group(1)) if match else len(worksheet.get_all_values())
 

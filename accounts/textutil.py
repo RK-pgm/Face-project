@@ -1,5 +1,6 @@
 import unicodedata
 
+
 def clean_text(value):
     if not isinstance(value, str):
         return None

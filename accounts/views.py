@@ -41,6 +41,7 @@ def home(request):
         return redirect("dashboard")
     return redirect("login")
 
+
 @require_http_methods(["GET", "POST"])
 def register(request):
     if request.method == "GET":
@@ -50,13 +51,11 @@ def register(request):
     if payload is None:
         return JsonResponse({"ok": False, "errors": {"__all__": "The submitted data is invalid."}}, status=400)
 
-
     form_data = {k: v for k, v in payload.items() if isinstance(v, (str, bool))}
     form = RegisterForm(form_data)
     errors = {}
     if not form.is_valid():
         errors = {field: msgs[0] for field, msgs in form.errors.items()}
-
 
     descriptor = photo_file = None
     try:
@@ -89,6 +88,7 @@ def register(request):
     )
     return JsonResponse({"ok": True, "redirect": "/"})
 
+
 def _fail(name, person, reason, throttle_key=None):
     LoginLog.objects.create(
         person=person,
@@ -117,7 +117,6 @@ def login_view(request):
     pin = payload.get("pin") if isinstance(payload.get("pin"), str) else ""
     key = security.throttle_key(name)
 
-
     seconds_left = security.lock_seconds_left(key) if name else 0
     if seconds_left:
         LoginLog.objects.create(attempted_name=name[:50], success=False, fail_reason="locked")
@@ -133,7 +132,6 @@ def login_view(request):
         descriptor = None
     if not name or not PIN_PATTERN.match(pin) or descriptor is None:
         return _fail(name, None, "format", key if name else None)
-
 
     candidates = list(Person.objects.filter(first_name__iexact=name))
     if not candidates:
@@ -153,11 +151,9 @@ def login_view(request):
         only_one = candidates[0] if len(candidates) == 1 else None
         return _fail(name, only_one, "face" if pin_ok_people else "pin", key)
 
-
     request.session.cycle_key()
     request.session[SESSION_KEY] = matched.pk
     security.reset(key)
-
 
     login_log = LoginLog.objects.create(
         person=matched,
@@ -168,6 +164,7 @@ def login_view(request):
     request.session[ACTIVE_LOGIN_LOG_KEY] = login_log.pk
 
     return JsonResponse({"ok": True, "redirect": "/dashboard/"})
+
 
 @person_login_required
 @require_http_methods(["GET", "POST"])
@@ -244,6 +241,7 @@ def my_photo(request):
     response["Cache-Control"] = "private, no-store"
     return response
 
+
 @person_login_required
 @require_http_methods(["GET", "POST"])
 def change_face(request):
@@ -251,7 +249,6 @@ def change_face(request):
         return render(request, "accounts/change_face.html")
 
     person = request.person
-
 
     key = "changeface:" + person.member_code
     seconds_left = security.lock_seconds_left(key)
@@ -295,6 +292,7 @@ def change_face(request):
 
     messages.success(request, "Your sign-in face has been updated.")
     return JsonResponse({"ok": True, "redirect": "/dashboard/"})
+
 
 @staff_member_required
 def counter_queue(request):

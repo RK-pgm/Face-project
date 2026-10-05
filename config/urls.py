@@ -6,7 +6,3 @@ urlpatterns = [
     path("", include("accounts.urls")),
 ]
 
-
-
-
-

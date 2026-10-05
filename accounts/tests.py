@@ -1,12 +1,14 @@
 import base64
 import json
 import random
+import tempfile
 from io import BytesIO
 from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.test import Client, TestCase, override_settings
+from django.utils import timezone
 from django.urls import reverse
 from PIL import Image
 
@@ -43,9 +45,11 @@ REGISTER_OK = {
 
 
 FAST_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+_TEST_MEDIA = tempfile.TemporaryDirectory(prefix="face_login_test_media_")
+TEST_MEDIA_ROOT = _TEST_MEDIA.name
 
 
-@override_settings(SHEETS_USE_THREAD=False, MEDIA_ROOT="/tmp/face_login_test_media", PASSWORD_HASHERS=FAST_HASHERS)
+@override_settings(SHEETS_USE_THREAD=False, MEDIA_ROOT=TEST_MEDIA_ROOT, PASSWORD_HASHERS=FAST_HASHERS)
 class BaseCase(TestCase):
     def register(self, client=None, seed=1, **overrides):
         data = dict(REGISTER_OK, descriptor=make_descriptor(seed), photo=make_photo_data_url(), **overrides)
@@ -57,6 +61,10 @@ class BaseCase(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             return post_json(client or self.client, reverse("login"),
                              {"name": name, "pin": pin, "descriptor": descriptor})
+
+    def sign_out(self, client=None):
+        with self.captureOnCommitCallbacks(execute=True):
+            return (client or self.client).post(reverse("logout"))
 
 
 class RegisterTests(BaseCase):
@@ -147,12 +155,23 @@ class LoginTests(BaseCase):
     def test_success_needs_name_pin_and_face(self):
         with mock.patch("accounts.views.sheets.enqueue_sync") as enqueue:
             response = self.login()
+            enqueue.assert_not_called()
+            self.sign_out()
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["ok"])
-        self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
         log = LoginLog.objects.get(success=True)
         self.assertEqual(log.sheet_status, LoginLog.SheetStatus.PENDING)
+        self.assertIsNotNone(log.logged_out_at)
         enqueue.assert_called_once()
+
+    def test_dashboard_records_payment_for_active_visit(self):
+        self.login()
+        response = self.client.post(reverse("dashboard"), {"amount": "12.50", "payment_method": "transfer"})
+        self.assertRedirects(response, reverse("dashboard"))
+        log = LoginLog.objects.get(success=True)
+        self.assertEqual(str(log.amount), "12.50")
+        self.assertEqual(log.payment_method, "transfer")
+        self.assertEqual(log.recorded_by, "สมชาย ใจดี")
 
     def test_name_is_case_insensitive_and_trims_spaces(self):
         self.assertEqual(self.login(name="  สมชาย  ").status_code, 200)
@@ -414,7 +433,7 @@ class CounterTests(BaseCase):
     def test_new_login_appears_in_pending_queue(self):
         response = self.staff_client.get(reverse("counter_queue"))
         self.assertContains(response, "สมชาย")
-        self.assertContains(response, "ยังไม่มีรายการที่คีย์วันนี้")
+        self.assertContains(response, "No sales have been recorded today.")
 
     def test_record_sale_updates_log_and_leaves_queue(self):
         response = self.staff_client.post(reverse("record_sale", args=[self.log.id]),
@@ -485,7 +504,7 @@ class CounterTests(BaseCase):
 
 @override_settings(
     SHEETS_USE_THREAD=False, GOOGLE_SHEET_ID="sheet123",
-    GOOGLE_SERVICE_ACCOUNT_FILE="/tmp/fake.json", MEDIA_ROOT="/tmp/face_login_test_media",
+    GOOGLE_SERVICE_ACCOUNT_FILE="/tmp/fake.json", MEDIA_ROOT=TEST_MEDIA_ROOT,
     PASSWORD_HASHERS=FAST_HASHERS,
 )
 class SheetTests(BaseCase):
@@ -501,11 +520,18 @@ class SheetTests(BaseCase):
         worksheet = mock.MagicMock()
         with mock.patch.object(sheets, "_get_worksheet", return_value=worksheet):
             self.assertEqual(self.login().status_code, 200)
+            log = LoginLog.objects.get(success=True)
+            log.amount = "27.50"
+            log.payment_method = LoginLog.PaymentMethod.CASH
+            log.save(update_fields=["amount", "payment_method"])
+            self.sign_out()
         worksheet.append_row.assert_called_once()
         row, kwargs = worksheet.append_row.call_args
         values = row[0]
         person = Person.objects.get()
-        self.assertEqual(values[1:], [person.full_name, person.nickname, person.member_code])
+        self.assertEqual(values[1:4], [person.full_name, person.nickname, person.member_code])
+        self.assertEqual(values[5:], ["27.50", "Cash"])
+        self.assertRegex(values[4], r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
         self.assertRegex(values[0], r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
         self.assertEqual(kwargs["value_input_option"], "RAW")
         self.assertNotIn("1234", " ".join(map(str, values)))
@@ -514,7 +540,6 @@ class SheetTests(BaseCase):
     def test_row_uses_bangkok_time(self):
         person = Person.objects.get()
         log = LoginLog.objects.create(person=person, success=True, sheet_status="pending")
-        from django.utils import timezone
         import datetime
         log.created_at = datetime.datetime(2026, 1, 1, 0, 30, tzinfo=datetime.timezone.utc)
         self.assertEqual(sheets._row_for(log)[0], "2026-01-01 07:30:00")
@@ -524,8 +549,10 @@ class SheetTests(BaseCase):
         worksheet.append_row.side_effect = ConnectionError("network down")
         with mock.patch.object(sheets, "_get_worksheet", return_value=worksheet):
             response = self.login()
+            self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
+            self.sign_out()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("dashboard")).status_code, 302)
         log = LoginLog.objects.get(success=True)
         self.assertEqual(log.sheet_status, "failed")
         self.assertEqual(log.sheet_attempts, 1)
@@ -544,7 +571,7 @@ class SheetTests(BaseCase):
         worksheet = mock.MagicMock()
         with mock.patch.object(sheets, "_get_worksheet", return_value=worksheet):
             self.login()
-            sheets.sync_pending_logs()
+            self.sign_out()
             sheets.sync_pending_logs()
         self.assertEqual(worksheet.append_row.call_count, 1)
 
@@ -558,7 +585,12 @@ class SheetTests(BaseCase):
     def test_stops_at_first_error_and_keeps_order(self):
         person = Person.objects.get()
         for _ in range(3):
-            LoginLog.objects.create(person=person, success=True, sheet_status="pending")
+            LoginLog.objects.create(
+                person=person,
+                success=True,
+                logged_out_at=timezone.now(),
+                sheet_status="pending",
+            )
         worksheet = mock.MagicMock()
         worksheet.append_row.side_effect = [None, RuntimeError("quota"), None]
         with mock.patch.object(sheets, "_get_worksheet", return_value=worksheet):
@@ -569,9 +601,9 @@ class SheetTests(BaseCase):
 
     def test_stuck_sending_rows_are_recovered(self):
         import datetime
-        from django.utils import timezone
         person = Person.objects.get()
         LoginLog.objects.create(person=person, success=True, sheet_status="sending",
+                                logged_out_at=timezone.now(),
                                 sheet_last_try=timezone.now() - datetime.timedelta(minutes=10))
         worksheet = mock.MagicMock()
         with mock.patch.object(sheets, "_get_worksheet", return_value=worksheet):

@@ -6,6 +6,7 @@ from django import forms
 from .models import LoginLog
 from .textutil import clean_text
 
+
 PIN_PATTERN = re.compile(r"^\d{4,6}$")
 
 

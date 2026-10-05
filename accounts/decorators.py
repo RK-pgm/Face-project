@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 
 from .models import Person
 
+
 SESSION_KEY = "person_id"
 
 

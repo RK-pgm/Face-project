@@ -11,9 +11,11 @@ def generate_member_code():
             return code
     raise RuntimeError("Could not generate a unique member ID.")
 
+
 def face_photo_path(instance, filename):
 
     return f"faces/{uuid.uuid4().hex}.jpg"
+
 
 class Person(models.Model):
 
@@ -54,7 +56,6 @@ class LoginLog(models.Model):
     class PaymentMethod(models.TextChoices):
         CASH = "cash", "Cash"
         TRANSFER = "transfer", "Bank transfer"
-
 
     person = models.ForeignKey(Person, null=True, blank=True, on_delete=models.CASCADE, related_name="logs")
     attempted_name = models.CharField("Entered name", max_length=50, blank=True)

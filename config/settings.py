@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -16,10 +17,8 @@ def _load_dotenv():
         value = value.strip().strip('"').strip("'")
         if not value:
 
-
             continue
         os.environ.setdefault(key.strip(), value)
-
 
 _load_dotenv()
 
@@ -28,16 +27,12 @@ def _env_bool(name, default):
     return os.environ.get(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
 
 
-
-
-
-
-
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-key-change-before-production")
 DEBUG = _env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"] + [
     h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()
 ]
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -49,6 +44,7 @@ INSTALLED_APPS = [
     "accounts",
 ]
 
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -59,7 +55,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
 ROOT_URLCONF = "config.urls"
+
 
 TEMPLATES = [
     {
@@ -77,9 +75,8 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = "config.wsgi.application"
-
-
 
 
 DATABASES = {
@@ -91,9 +88,8 @@ DATABASES = {
     }
 }
 
+
 AUTH_PASSWORD_VALIDATORS = []
-
-
 
 
 LANGUAGE_CODE = "en-us"
@@ -101,13 +97,17 @@ TIME_ZONE = "Asia/Bangkok"
 USE_I18N = True
 USE_TZ = True
 
+
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 
 SESSION_COOKIE_AGE = 60 * 60 * 2
 SESSION_COOKIE_HTTPONLY = True
@@ -115,21 +115,10 @@ SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
 
-
-
-
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 
-
-
-
-
-
-
 FACE_MATCH_THRESHOLD = float(os.environ.get("FACE_MATCH_THRESHOLD", "0.5"))
-
-
 
 
 LOGIN_MAX_FAILED_ATTEMPTS = 5
@@ -137,20 +126,19 @@ LOGIN_LOCK_MINUTES = 5
 LOGIN_FAIL_WINDOW_MINUTES = 15
 
 
-
-
-
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
+
 
 GOOGLE_SHEET_WORKSHEET = os.environ.get("GOOGLE_SHEET_WORKSHEET", "")
 
+
 GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE", "")
+
 
 GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 
+
 SHEETS_USE_THREAD = True
-
-
 
 
 LOGGING = {
@@ -159,7 +147,6 @@ LOGGING = {
     "formatters": {"simple": {"format": "[{levelname}] {name}: {message}", "style": "{"}},
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
     "loggers": {
-
 
         "accounts": {"handlers": ["console"], "level": "INFO"},
     },

@@ -2,8 +2,10 @@ import sys
 import urllib.request
 from pathlib import Path
 
+
 BASE = "https://raw.githubusercontent.com/vladmandic/face-api/master"
 TARGET = Path(__file__).resolve().parent.parent / "static" / "vendor" / "face-api"
+
 
 FILES = {
     "dist/face-api.js": TARGET / "face-api.js",
@@ -26,7 +28,6 @@ def main():
         local.write_bytes(data)
         print(f"Done ({len(data) / 1024:.0f} KB)")
     print("Done. Files are in", TARGET)
-
 
 if __name__ == "__main__":
     main()

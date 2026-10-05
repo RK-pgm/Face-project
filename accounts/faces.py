@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from PIL import Image, UnidentifiedImageError
 
+
 DESCRIPTOR_LENGTH = 128
 MAX_PHOTO_BYTES = 3 * 1024 * 1024
 MAX_PHOTO_PIXELS = 4_000_000
@@ -15,6 +16,7 @@ SAVED_PHOTO_MAX_SIDE = 480
 
 class FaceDataError(ValueError):
     pass
+
 
 def parse_descriptor(value):
     if not isinstance(value, (list, tuple)) or len(value) != DESCRIPTOR_LENGTH:
