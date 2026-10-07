@@ -1,38 +1,155 @@
-# Face Sign-in and Sales Counter
+# ระบบลงชื่อเข้าใช้ด้วยใบหน้าและบันทึกยอดขาย
 
-A local Django application that verifies members using their name, PIN, and face. Successful sign-ins can be recorded in Google Sheets. Staff can record a sale for each visit and review daily totals.
+โปรเจกต์เว็บแอปพลิเคชันที่พัฒนาด้วย Django สำหรับลงทะเบียนสมาชิกและยืนยันตัวตนด้วยชื่อ, PIN และใบหน้า หลังเข้าสู่ระบบ สมาชิกสามารถดูข้อมูลและประวัติการเข้าใช้งาน ส่วนเจ้าหน้าที่สามารถบันทึกยอดขายของแต่ละ visit และดูรายงานรายวันได้ ข้อมูลหลักจัดเก็บใน SQLite และเลือกส่งข้อมูลการเข้าใช้งานไปยัง Google Sheets ได้
 
-## Features
+> โปรเจกต์นี้ตั้งค่าไว้สำหรับทดลองและใช้งานภายในเครื่อง การนำขึ้นใช้งานจริงต้องตั้งค่าความปลอดภัยและการจัดการข้อมูลส่วนบุคคลให้เหมาะสมก่อน
 
-- Face detection and matching in the browser with face-api.js.
-- Django 5 and SQLite for member records and sign-in history.
-- PINs stored as password hashes.
-- Member dashboard and face-photo updates.
-- Staff-only sales queue, sale entry, and daily reports.
-- Local copies of face-api.js, its models, Bootstrap, and fonts.
+## ฟังก์ชันหลัก
 
-## Run locally
+### สมาชิก
 
-1. Create and activate a virtual environment.
-2. Install dependencies with `python -m pip install -r requirements.txt`.
-3. Copy `.env.example` to `.env` and set any desired configuration.
-4. Run `python manage.py migrate`.
-5. Create a staff account with `python manage.py createsuperuser`.
-6. Start the site with `python manage.py runserver` and open `http://localhost:8000`.
+- ลงทะเบียนด้วยชื่อจริง นามสกุล ชื่อเล่น และ PIN ความยาว 4–6 หลัก
+- ถ่ายภาพใบหน้าและให้ความยินยอมก่อนบันทึกข้อมูลใบหน้า
+- สร้างรหัสสมาชิกอัตโนมัติ
+- ลงชื่อเข้าใช้ด้วยชื่อ, PIN และการตรวจจับใบหน้าในเบราว์เซอร์
+- ดูหน้าแดชบอร์ดและประวัติการเข้าใช้งาน
+- เปลี่ยนภาพและข้อมูลใบหน้าที่ใช้ยืนยันตัวตน
+- ออกจากระบบเพื่อบันทึกเวลาออกจากระบบ
 
-Use `/counter/` and `/reports/daily/` while signed in with a Django staff account. Member sign-in uses a separate name, PIN, and face session.
+### เจ้าหน้าที่
 
-## Google Sheets
+ผู้ใช้ที่เข้าสู่ระบบด้วยบัญชี Django Staff สามารถ:
 
-Google Sheets integration is optional. Configure the sheet ID and a service-account credential in `.env`, then share the sheet with the service account. When Sheets is not configured, local sign-in continues to work.
+- เปิดคิวรายการเข้าใช้งานที่รอบันทึกยอดขายที่ `/counter/`
+- บันทึกยอดเงินและวิธีชำระเงินสำหรับแต่ละ visit
+- ดูสรุปยอดรายวันได้ที่ `/reports/daily/`
+- จัดการข้อมูลผ่าน Django Admin ที่ `/admin/`
 
-## Face data
+### การบันทึกข้อมูล
 
-The application stores a face photo and a 128-value face descriptor after the member gives consent. Do not publish member photos, descriptors, database files, or service-account credentials. The default settings are intended for local development, not public deployment.
+- ฐานข้อมูล SQLite เก็บข้อมูลสมาชิก ประวัติการเข้าใช้งาน และยอดขาย
+- PIN ถูกจัดเก็บเป็นค่าแฮช ไม่ได้บันทึกเป็น PIN ตัวอักษรปกติ
+- ภาพใบหน้าและ face descriptor (ตัวเลข 128 ค่า) ใช้สำหรับการยืนยันตัวตน
+- หากตั้งค่า Google Sheets ระบบจะซิงก์ข้อมูลการเข้าใช้และข้อมูลที่เกี่ยวข้อง เช่น เวลาเข้า–ออก รหัสสมาชิก ยอดเงิน และวิธีชำระเงิน
+- มีการจำกัดการลองเข้าสู่ระบบที่ล้มเหลวตามค่าที่กำหนดในระบบ
 
-## Troubleshooting
+## เทคโนโลยี
 
-- Camera access requires `http://localhost:8000` or HTTPS.
-- If a model file is missing, run `python scripts/download_face_api.py`.
-- If Django is missing, activate the virtual environment and reinstall `requirements.txt`.
-- Inspect the Django admin for sign-in and Google Sheets delivery status.
+- Python และ Django 5.2
+- SQLite
+- face-api.js สำหรับตรวจจับและเปรียบเทียบใบหน้าในเบราว์เซอร์
+- Pillow สำหรับจัดการไฟล์ภาพ
+- gspread สำหรับเชื่อมต่อ Google Sheets (เป็นตัวเลือก)
+- Bootstrap และฟอนต์ภาษาไทยที่เก็บไว้ในโปรเจกต์
+
+## โครงสร้างโปรเจกต์
+
+```text
+face_login_project/
+├── accounts/                 # โมเดล หน้าเว็บ ฟอร์ม และระบบสมาชิก
+│   ├── templates/accounts/   # เทมเพลตหน้าลงทะเบียน เข้าสู่ระบบ แดชบอร์ด และรายงาน
+│   ├── static/accounts/      # ไฟล์ static ของแอป accounts
+│   ├── migrations/           # การเปลี่ยนแปลงโครงสร้างฐานข้อมูล
+│   ├── faces.py              # ตรวจสอบและจัดการข้อมูลใบหน้า
+│   ├── security.py           # ฟังก์ชันด้านความปลอดภัยและ PIN
+│   └── sheets.py             # การซิงก์ข้อมูลไปยัง Google Sheets
+├── config/                   # การตั้งค่า Django และ URL หลัก
+├── scripts/                  # สคริปต์ช่วยดาวน์โหลดไฟล์ face-api.js
+├── static/vendor/            # ไลบรารีและโมเดลที่ใช้ในเบราว์เซอร์
+├── media/faces/              # ภาพใบหน้าที่อัปโหลด (ข้อมูลส่วนบุคคล)
+├── .env.example              # ตัวอย่างค่าตั้งต้นสำหรับ environment
+├── manage.py                 # คำสั่งจัดการ Django
+└── requirements.txt          # รายการไลบรารี Python
+```
+
+## สิ่งที่ต้องเตรียม
+
+- Python ที่รองรับ Django 5.2
+- `pip`
+- เว็บเบราว์เซอร์ที่อนุญาตให้เข้าถึงกล้อง
+- อินเทอร์เน็ตเฉพาะกรณีติดตั้งแพ็กเกจ หรือต้องดาวน์โหลดไฟล์โมเดลที่ยังไม่มี
+
+## ติดตั้งและเริ่มใช้งานบน Windows
+
+เปิด PowerShell ที่โฟลเดอร์เดียวกับ `manage.py` แล้วรัน:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+เปิดเว็บที่ [http://127.0.0.1:8000/](http://127.0.0.1:8000/) กล้องทำงานได้บน `localhost` หรือเว็บไซต์ที่ใช้ HTTPS เท่านั้น
+
+หาก PowerShell ไม่อนุญาตให้เปิดใช้งาน virtual environment สามารถรันคำสั่งผ่าน `\.venv\Scripts\python.exe` ได้โดยตรง เช่น:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver
+```
+
+## การตั้งค่า `.env`
+
+คัดลอก `.env.example` เป็น `.env` แล้วปรับค่าตามต้องการ:
+
+| ตัวแปร | ความหมาย |
+| --- | --- |
+| `DJANGO_SECRET_KEY` | กุญแจลับของ Django ควรสร้างค่าใหม่และเก็บเป็นความลับ |
+| `DJANGO_DEBUG` | เปิดโหมด debug สำหรับพัฒนา (`1`) ควรปิดเมื่อใช้งานจริง (`0`) |
+| `FACE_MATCH_THRESHOLD` | เกณฑ์ระยะห่างในการจับคู่ใบหน้า ค่าเริ่มต้น `0.5` |
+| `GOOGLE_SHEET_ID` | ID ของ Google Spreadsheet (ไม่บังคับ) |
+| `GOOGLE_SHEET_WORKSHEET` | ชื่อ worksheet ที่ต้องการใช้ หากเว้นว่างจะใช้ชีตแรก |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | path ไปยังไฟล์ credentials ของ service account (ไม่บังคับ) |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | credentials รูปแบบ JSON (ทางเลือกแทนไฟล์) |
+| `DJANGO_ALLOWED_HOSTS` | รายชื่อ host ที่อนุญาต คั่นด้วยเครื่องหมายจุลภาคเมื่อต้องกำหนดเพิ่มเติม |
+
+อย่า commit ไฟล์ `.env` หรือ credentials ขึ้น Git และอย่าวางข้อมูลลับไว้ใน README หรือซอร์สโค้ด
+
+## ตั้งค่า Google Sheets (ไม่บังคับ)
+
+1. สร้าง Google Spreadsheet และคัดลอก Spreadsheet ID จาก URL
+2. สร้าง Google service account และดาวน์โหลด credentials อย่างปลอดภัย
+3. แชร์ Spreadsheet ให้กับอีเมลของ service account โดยให้สิทธิ์แก้ไข
+4. กำหนด `GOOGLE_SHEET_ID` และ `GOOGLE_SERVICE_ACCOUNT_FILE` ใน `.env` (หรือใช้ `GOOGLE_SERVICE_ACCOUNT_JSON`)
+5. หากต้องการใช้ worksheet เฉพาะ ให้กำหนดชื่อใน `GOOGLE_SHEET_WORKSHEET`
+
+เมื่อยังไม่ได้กำหนดค่า Google Sheets ระบบยังใช้งานและบันทึกข้อมูลใน SQLite ได้ การส่งข้อมูลไปยังชีตอาจรอสักครู่ และสถานะการซิงก์ตรวจสอบได้ใน Django Admin
+
+## เส้นทางหน้าเว็บที่ใช้บ่อย
+
+| URL | การใช้งาน |
+| --- | --- |
+| `/` | หน้าแรก |
+| `/register/` | ลงทะเบียนสมาชิก |
+| `/login/` | ลงชื่อเข้าใช้ |
+| `/dashboard/` | แดชบอร์ดสมาชิก |
+| `/me/change-face/` | เปลี่ยนข้อมูลใบหน้า |
+| `/counter/` | คิวบันทึกยอดขายสำหรับเจ้าหน้าที่ |
+| `/reports/daily/` | รายงานสรุปรายวันสำหรับเจ้าหน้าที่ |
+| `/admin/` | Django Admin |
+
+## การจัดการฐานข้อมูลและข้อมูลอัปโหลด
+
+- สร้างหรือปรับโครงสร้างฐานข้อมูลด้วย `python manage.py migrate`
+- สร้างบัญชีผู้ดูแลระบบด้วย `python manage.py createsuperuser`
+- ฐานข้อมูลอยู่ใน `db.sqlite3` และไฟล์ภาพสมาชิกอยู่ใน `media/`
+- ก่อนย้ายเครื่องหรืออัปเดต ควรสำรองฐานข้อมูลและไฟล์ใน `media/` อย่างปลอดภัย
+
+## แก้ปัญหาเบื้องต้น
+
+- **เบราว์เซอร์เปิดกล้องไม่ได้:** ใช้ `http://127.0.0.1:8000/` หรือ HTTPS และตรวจสอบสิทธิ์กล้องของเบราว์เซอร์
+- **ไม่พบไฟล์โมเดลหรือ face-api.js:** รัน `python scripts/download_face_api.py` จากโฟลเดอร์โปรเจกต์
+- **ติดตั้งไลบรารีไม่สำเร็จ:** ตรวจสอบว่าเปิด virtual environment แล้ว และติดตั้งด้วย `python -m pip install -r requirements.txt`
+- **Google Sheets ไม่ได้รับข้อมูล:** ตรวจสอบ Spreadsheet ID, ชื่อ worksheet, credentials และสิทธิ์แชร์ให้ service account จากนั้นดูสถานะ/ข้อผิดพลาดใน Django Admin
+- **เปลี่ยนโมเดลแล้วหน้าเว็บยังใช้ข้อมูลเก่า:** รีเฟรชหน้าเว็บแบบล้าง cache หรือเปิดหน้าต่างส่วนตัว
+
+## ความเป็นส่วนตัวและความปลอดภัย
+
+ข้อมูลใบหน้าเป็นข้อมูลส่วนบุคคลที่มีความอ่อนไหว ควรขอความยินยอมก่อนเก็บ ใช้สิทธิ์เข้าถึงฐานข้อมูลและไฟล์ภาพอย่างจำกัด และลบข้อมูลเมื่อไม่มีความจำเป็นต้องใช้ PIN ถูกแฮชก่อนจัดเก็บ แต่การเก็บภาพใบหน้าและ descriptor ยังคงต้องได้รับการดูแลและป้องกันอย่างเหมาะสม
+
+ค่าตั้งต้นในโปรเจกต์เหมาะสำหรับการพัฒนาในเครื่องเท่านั้น ก่อนเปิดให้ใช้งานผ่านเครือข่ายสาธารณะ ควรตั้งค่า `DJANGO_SECRET_KEY`, ปิด `DJANGO_DEBUG`, กำหนด `DJANGO_ALLOWED_HOSTS`, ใช้ HTTPS และทบทวนการจัดเก็บ/สำรองข้อมูลอย่างรอบคอบ
