@@ -29,10 +29,16 @@ def _env_bool(name, default):
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-key-change-before-production")
 DEBUG = _env_bool("DJANGO_DEBUG", True)
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"] + [
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "10.58.255.196"] + [
     h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if _env_bool("DJANGO_TRUST_PROXY_SSL", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
     "django.contrib.admin",

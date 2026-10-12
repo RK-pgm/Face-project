@@ -83,7 +83,7 @@ h1, h2, h3, h4 { font-weight: 600; line-height: 1.4; }
   border-radius: 1rem; overflow: hidden;
 }
 
-.camera-frame video, .camera-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
+.camera-frame video, .camera-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
 .camera-frame::before, .camera-frame::after {
   content: ""; position: absolute; inset: 12% 22%; pointer-events: none; z-index: 2; opacity: .85;
