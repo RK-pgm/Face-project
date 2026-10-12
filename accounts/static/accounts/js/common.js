@@ -46,23 +46,49 @@
   }
 
   
-  async function startCamera(video) {
+  async function startCamera(video, facingMode, requireFacingMode, deviceId) {
     if (!window.isSecureContext) {
       throw new Error("INSECURE_CONTEXT");
     }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error("NO_MEDIA_API");
     }
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-      audio: false,
-    });
+    const mode = facingMode || "environment";
+    const videoConstraints = {
+      width: { ideal: 640 },
+      height: { ideal: 480 },
+    };
+    if (deviceId) {
+      videoConstraints.deviceId = { exact: deviceId };
+    } else {
+      videoConstraints.facingMode = requireFacingMode ? { exact: mode } : { ideal: mode };
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
     video.srcObject = stream;
     await video.play();
     if (!video.videoWidth) {
       await new Promise(function (resolve) { video.addEventListener("loadedmetadata", resolve, { once: true }); });
     }
     return stream;
+  }
+
+  async function getAlternateCamera(stream, facingMode) {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cameras = devices.filter(function (device) { return device.kind === "videoinput"; });
+    if (cameras.length < 2) { throw new Error("ONLY_ONE_CAMERA"); }
+
+    const track = stream && stream.getVideoTracks()[0];
+    const currentId = track && track.getSettings ? track.getSettings().deviceId : "";
+    const preferredLabel = facingMode === "user" ? /front|user|selfie/i : /back|rear|environment/i;
+    let next = cameras.find(function (device) {
+      return device.deviceId !== currentId && preferredLabel.test(device.label);
+    });
+    if (!next) {
+      next = cameras.find(function (device) { return device.deviceId !== currentId; });
+    }
+    if (!next && cameras.length > 1) { next = cameras[1]; }
+    if (!next || next.deviceId === currentId) { throw new Error("ONLY_ONE_CAMERA"); }
+    return next;
   }
 
   function stopCamera(stream) {
@@ -79,6 +105,11 @@
       case "NotFoundError":
       case "DevicesNotFoundError":
         return "No camera found. Connect a webcam and refresh the page.";
+      case "ONLY_ONE_CAMERA":
+        return "No other camera was found on this device.";
+      case "OverconstrainedError":
+      case "ConstraintNotSatisfiedError":
+        return "This camera is not available on your device.";
       case "NotReadableError":
       case "TrackStartError":
         return "Could not open the camera. Close other apps using it (such as Zoom or Teams), then refresh the page.";
@@ -168,6 +199,7 @@
     postJson: postJson,
     loadModels: loadModels,
     startCamera: startCamera,
+    getAlternateCamera: getAlternateCamera,
     stopCamera: stopCamera,
     cameraErrorMessage: cameraErrorMessage,
     setStatus: setStatus,
