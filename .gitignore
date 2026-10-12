@@ -3,8 +3,13 @@
 service-account*.json
 *credentials*.json
 db.sqlite3
+*.sqlite3
+*.sqlite3-journal
 media/*
 !media/.gitkeep
+staticfiles/
+coverage/
+.test-tmp/
 
 venv/
 .venv/
@@ -12,3 +17,6 @@ __pycache__/
 *.pyc
 .idea/
 .vscode/
+*.log
+Thumbs.db
+.DS_Store

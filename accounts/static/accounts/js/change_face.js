@@ -7,6 +7,7 @@
   const overlay = document.getElementById("overlay");
   const placeholder = document.getElementById("camera-placeholder");
   const statusEl = document.getElementById("face-status");
+  const cameraSwitchBtn = document.getElementById("switch-camera-btn");
   const captureBtn = document.getElementById("capture-btn");
   const retakeBtn = document.getElementById("retake-btn");
   const snapshotWrap = document.getElementById("snapshot-wrap");
@@ -16,6 +17,7 @@
   const pinInput = document.getElementById("pin");
 
   let stream = null;
+  let facingMode = "environment";
   let stopWatching = null;
   let liveFaceCount = 0;
   let capturing = false;
@@ -33,6 +35,7 @@
 
   function refreshButtons() {
     const hasPhoto = !!captured.descriptor;
+    cameraSwitchBtn.disabled = !stream || capturing || submitting;
     captureBtn.disabled = !stream || hasPhoto || capturing || liveFaceCount !== 1;
     submitBtn.disabled = !hasPhoto || submitting;
   }
@@ -44,7 +47,7 @@
   async function init() {
     try {
       await FL.loadModels();
-      stream = await FL.startCamera(video);
+      stream = await FL.startCamera(video, facingMode);
     } catch (err) {
       console.error(err);
       placeholder.textContent = "Could not open the camera";
@@ -66,6 +69,48 @@
       refreshButtons();
     });
   }
+
+  async function switchCamera() {
+    if (!stream || capturing || submitting) { return; }
+    const previousMode = facingMode;
+    const nextMode = facingMode === "user" ? "environment" : "user";
+    let streamStopped = false;
+    try {
+      const nextCamera = await FL.getAlternateCamera(stream, nextMode);
+      if (stopWatching) { stopWatching(); stopWatching = null; }
+      FL.stopCamera(stream);
+      stream = null;
+      streamStopped = true;
+      video.pause();
+      video.srcObject = null;
+      refreshButtons();
+      captured.descriptor = null;
+      captured.photo = null;
+      snapshotWrap.hidden = true;
+      retakeBtn.hidden = true;
+      await new Promise(function (resolve) { setTimeout(resolve, 300); });
+      stream = await FL.startCamera(video, nextMode, true, nextCamera.deviceId);
+      facingMode = nextMode;
+      cameraSwitchBtn.textContent = facingMode === "user" ? "Switch to rear camera" : "Switch to front camera";
+      FL.setStatus(statusEl, "idle", facingMode === "user" ? "Front camera active." : "Rear camera active.", 2500);
+      startWatching();
+    } catch (err) {
+      console.error(err);
+      FL.setStatus(statusEl, "error", FL.cameraErrorMessage(err), 5000);
+      if (streamStopped) {
+        try {
+          stream = await FL.startCamera(video, previousMode);
+          startWatching();
+        } catch (restoreErr) {
+          console.error(restoreErr);
+        }
+      }
+    } finally {
+      refreshButtons();
+    }
+  }
+
+  cameraSwitchBtn.addEventListener("click", switchCamera);
 
   captureBtn.addEventListener("click", async function () {
     if (capturing || !stream) { return; }
