@@ -27,9 +27,14 @@ def _env_bool(name, default):
     return os.environ.get(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
 
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-key-change-before-production")
-DEBUG = _env_bool("DJANGO_DEBUG", True)
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "10.58.255.196"] + [
+ON_VERCEL = os.environ.get("VERCEL", "").lower() == "1"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if ON_VERCEL:
+        raise RuntimeError("Set DJANGO_SECRET_KEY in the Vercel project environment variables.")
+    SECRET_KEY = "dev-only-key-change-before-production"
+DEBUG = _env_bool("DJANGO_DEBUG", not ON_VERCEL)
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"] + ([".vercel.app"] if ON_VERCEL else []) + [
     h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()
 ]
 CSRF_TRUSTED_ORIGINS = [
@@ -37,7 +42,9 @@ CSRF_TRUSTED_ORIGINS = [
     for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
-if _env_bool("DJANGO_TRUST_PROXY_SSL", False):
+if ON_VERCEL:
+    CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")
+if ON_VERCEL or _env_bool("DJANGO_TRUST_PROXY_SSL", False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
@@ -85,14 +92,19 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    import dj_database_url
 
-        "OPTIONS": {"timeout": 20},
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+            "OPTIONS": {"timeout": 20},
+        }
     }
-}
 
 
 AUTH_PASSWORD_VALIDATORS = []
@@ -106,6 +118,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 MEDIA_URL = "media/"
@@ -119,6 +132,8 @@ SESSION_COOKIE_AGE = 60 * 60 * 2
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
