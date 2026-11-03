@@ -217,9 +217,9 @@ Vercel ตรวจจับโปรเจกต์ Django จาก `manage.py
 
 - `DJANGO_SECRET_KEY`: สร้างค่าสุ่มเฉพาะโปรเจกต์ ห้าม commit ลง Git
 - `DJANGO_DEBUG`: ตั้งเป็น `0`
-- `DATABASE_URL`: URL ของ PostgreSQL ที่เชื่อมกับโปรเจกต์ หากไม่กำหนด ระบบจะใช้ SQLite ซึ่งไม่ใช่ฐานข้อมูลถาวรบน serverless
+- `DATABASE_URL`: URL ของ PostgreSQL ที่เชื่อมกับโปรเจกต์ จำเป็นสำหรับ Vercel เพื่อป้องกันการใช้ SQLite ชั่วคราว
 - `DJANGO_ALLOWED_HOSTS`: เพิ่ม host ของ custom domain (โดเมน `.vercel.app` รองรับอัตโนมัติ)
 - `DJANGO_CSRF_TRUSTED_ORIGINS`: เพิ่ม origin แบบเต็ม เช่น `https://example.com` เมื่อใช้ custom domain
 - `GOOGLE_SHEET_ID` และ `GOOGLE_SERVICE_ACCOUNT_JSON`: ตั้งค่าตามหัวข้อ Google Sheets ด้านบน
 
-หลังตั้งค่า PostgreSQL ให้รัน `python manage.py migrate` และ `python manage.py createsuperuser` กับฐานข้อมูลนั้น Vercel จะเสิร์ฟ static files ที่ collect ได้จาก CDN ส่วนไฟล์อัปโหลดใน `media/` ต้องใช้ object storage แบบถาวรก่อนบันทึกข้อมูลสมาชิกจริง เพราะไฟล์ใน serverless อาจหายได้
+สคริปต์ build จะรัน `python manage.py migrate --noinput` กับ PostgreSQL ให้อัตโนมัติ (ใช้ `DATABASE_URL_UNPOOLED` สำหรับ migration หาก provider มีค่านี้) หลัง deploy ให้สร้างบัญชีผู้ดูแลโดยรัน `python manage.py createsuperuser` ใน environment ที่เชื่อมฐานข้อมูลเดียวกัน Vercel จะเสิร์ฟ static files จาก CDN ส่วนไฟล์อัปโหลดใน `media/` ต้องใช้ object storage แบบถาวรก่อน เพราะไฟล์ใน serverless อาจหายได้

@@ -93,6 +93,8 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+if ON_VERCEL and not DATABASE_URL:
+    raise RuntimeError("Connect a PostgreSQL database and set DATABASE_URL in the Vercel project.")
 if DATABASE_URL:
     import dj_database_url
 

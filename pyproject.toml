@@ -1,0 +1,2 @@
+[tool.vercel.scripts]
+build = "python scripts/vercel_migrate.py"
