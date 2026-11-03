@@ -252,13 +252,13 @@ textarea.form-control { min-height: 100px; }
   inset: 0;
   display: grid;
   padding: 1rem;
-  place-items: center;
+  place-items: start center;
   color: #f2f7f5;
   text-align: center;
   background: transparent;
 }
 .camera-placeholder[hidden] { display: none; }
-.camera-placeholder-copy { padding: .35rem .6rem; color: #f2f7f5; background: rgba(16, 26, 24, .9); border-radius: 3px; }
+.camera-placeholder-copy { margin-top: .2rem; padding: .35rem .6rem; color: #f2f7f5; background: rgba(16, 26, 24, .9); border-radius: 3px; }
 .camera-card .d-flex.justify-content-end { justify-content: flex-start !important; padding-top: .35rem !important; }
 .camera-card .btn-outline-secondary { color: var(--ink); border-color: #aebbb7; background: transparent; }
 .camera-card .btn-outline-secondary:hover:not(:disabled) { color: var(--ink); border-color: #7d918c; background: #edf2f0; }
