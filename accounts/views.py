@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -139,7 +139,13 @@ def login_view(request):
     if not name or not PIN_PATTERN.match(pin) or descriptor is None:
         return _fail(name, None, "format", key if name else None)
 
-    candidates = list(Person.objects.filter(first_name__iexact=name))
+    # The form accepts a first name or the full name shown during registration.
+    # Resolve either form here; the PIN and face checks still identify the member.
+    name_parts = name.split(" ", 1)
+    name_query = Q(first_name__iexact=name)
+    if len(name_parts) == 2:
+        name_query |= Q(first_name__iexact=name_parts[0], last_name__iexact=name_parts[1])
+    candidates = list(Person.objects.filter(name_query))
     if not candidates:
         check_password(pin, _get_dummy_hash())
         return _fail(name, None, "no_user", key)
