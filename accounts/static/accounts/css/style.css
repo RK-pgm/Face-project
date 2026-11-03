@@ -251,7 +251,7 @@ textarea.form-control { min-height: 100px; }
   z-index: 3;
   inset: 0;
   display: grid;
-  padding: 1rem;
+  padding: .45rem 1rem 1rem;
   place-items: start center;
   color: #f2f7f5;
   text-align: center;
