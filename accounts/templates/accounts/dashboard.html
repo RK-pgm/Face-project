@@ -10,7 +10,6 @@
       </div>
 
       <div class="col-sm">
-        <span class="eyebrow">Member dashboard</span>
         <h1 class="h3 mb-1">{{ person.first_name }} {{ person.last_name }}</h1>
         <p class="lead-note mb-3">{{ person.nickname }}</p>
         <div class="profile-facts">
@@ -33,7 +32,6 @@
   </div>
 
   <div class="panel mb-4">
-    <span class="eyebrow">This visit</span>
     <h2 class="section-title">Payment details</h2>
     {% if active_log %}
       <p class="lead-note">Sign-in time: {{ active_log.created_at|date:"j F Y H:i:s" }}</p>
@@ -66,7 +64,6 @@
   </div>
 
   <div class="panel">
-    <span class="eyebrow">Your activity</span>
     <h2 class="section-title">Sign-in history</h2>
     <p class="section-caption">
       Showing your 30 most recent sign-in attempts, including failures. Contact an administrator if you see an attempt you did not make.

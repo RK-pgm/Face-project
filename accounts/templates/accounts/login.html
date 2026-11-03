@@ -4,17 +4,12 @@
 {% block title %}Sign in{% endblock %}
 
 {% block content %}
-  <div class="auth-layout">
-    <div class="auth-camera-column">
-      {% include "accounts/_camera.html" %}
-    </div>
-
+  <div class="auth-layout auth-layout--sign-in">
     <div class="auth-form-column">
       <div class="panel">
-        <span class="eyebrow">Member access</span>
-        <h1 class="auth-card-title">Welcome back</h1>
+        <h1 class="auth-card-title">Member sign-in</h1>
         <p class="auth-card-copy">
-          Enter your name and PIN, then face the camera. All three checks must pass.
+          Confirm your name and PIN while the camera checks your face.
         </p>
 
         <form id="login-form" novalidate>
@@ -55,6 +50,10 @@
           New here? <a href="{% url 'register' %}">Register</a>
         </p>
       </div>
+    </div>
+
+    <div class="auth-camera-column">
+      {% include "accounts/_camera.html" %}
     </div>
   </div>
 {% endblock %}
