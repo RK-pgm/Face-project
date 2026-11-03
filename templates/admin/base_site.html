@@ -5,7 +5,7 @@
 
 {% block extrastyle %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'accounts/css/admin.css' %}?v=20261103-member-studio-2">
+  <link rel="stylesheet" href="{% static 'accounts/css/admin.css' %}?v=20261103-member-studio-3">
 {% endblock %}
 
 {% block branding %}
@@ -20,6 +20,9 @@
 {% block nav-global %}
   <nav class="member-studio-admin-nav" aria-label="Administrator navigation">
     <a href="{% url 'admin:index' %}">ภาพรวม</a>
+    <a href="{% url 'admin:accounts_person_changelist' %}">สมาชิก</a>
+    <a href="{% url 'admin:accounts_loginlog_changelist' %}">ประวัติใช้งาน</a>
+    <a href="{% url 'admin:accounts_loginthrottle_changelist' %}">ความปลอดภัย</a>
     <a href="{% url 'counter_queue' %}">คิววันนี้</a>
     <a href="{% url 'daily_report' %}">รายงาน</a>
     <a class="admin-public-link" href="{% url 'home' %}">หน้าสมาชิก</a>

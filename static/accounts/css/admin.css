@@ -18,7 +18,6 @@
 @font-face { font-family: "Sarabun"; font-style: normal; font-weight: 600; font-display: swap; src: url("../../fonts/sarabun-thai-600-normal.woff2") format("woff2"); unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC; }
 @font-face { font-family: "Sarabun"; font-style: normal; font-weight: 600; font-display: swap; src: url("../../fonts/sarabun-latin-600-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 
-:root {
 html, body { min-height: 100%; }
 body, input, select, textarea, button { font-family: "Sarabun", "Leelawadee UI", Tahoma, system-ui, sans-serif; }
 body, #container { background: var(--fs-pale); color: var(--fs-ink); }
@@ -40,7 +39,10 @@ body, #container { background: var(--fs-pale); color: var(--fs-ink); }
 .breadcrumbs { padding: 12px 32px; color: #e5f0ec; background: var(--fs-green-ink); }
 .breadcrumbs a { color: #fff; }
 #content { max-width: 1600px; margin: 0 auto; padding: 32px; }
-.dashboard #nav-sidebar { display: none !important; }
+#nav-sidebar, #toggle-nav-sidebar { display: none !important; }
+.main { display: block; }
+.main > .content, .main > #nav-sidebar + .content,
+.main.shifted > #nav-sidebar + .content { width: 100%; max-width: 100%; }
 .dashboard #content { width: auto; max-width: none; }
 #content h1 { color: var(--fs-ink); font-size: 25px; font-weight: 700; }
 a:link, a:visited { color: var(--fs-green-ink); }
@@ -100,8 +102,9 @@ input[type=submit]:hover, .submit-row input:hover, .button:hover, a.button:hover
 .face-admin-section-head > a { flex: none; font-size: 13px; font-weight: 600; }
 .face-admin-table-wrap { overflow-x: auto; }
 .face-admin-table { width: 100%; border-collapse: collapse; }
-.face-admin-table th { height: 38px; color: #596b63; font-size: 12px; font-weight: 500; text-align: left; white-space: nowrap; }
-.face-admin-table td { height: 72px; border-top: 1px solid #e9e4d8; color: var(--fs-ink); font-size: 13px; vertical-align: middle; }
+.face-admin-table thead { background: #f4f7f4; }
+.face-admin-table th { height: 42px; padding: 8px 12px; color: #40564c; background: #f4f7f4; font-size: 13px; font-weight: 600; text-align: left; white-space: nowrap; }
+.face-admin-table td { height: 72px; padding-top: 10px; padding-bottom: 10px; border-top: 1px solid #e1e8e2; color: #19302a; background: #ffffff; font-size: 14px; vertical-align: middle; }
 .face-admin-table td:first-child { min-width: 150px; }
 .face-admin-table td strong, .face-admin-table td small { display: block; }
 .face-admin-table td strong { font-weight: 600; }
@@ -123,6 +126,28 @@ input[type=submit]:hover, .submit-row input:hover, .button:hover, a.button:hover
 .face-admin-shortcuts > a { display: block; padding: 12px 0; border-top: 1px solid #e9e4d8; color: var(--fs-ink) !important; font-weight: 600; text-decoration: none; }
 .face-admin-shortcuts > a span { display: block; margin-top: 2px; color: var(--fs-muted); font-size: 12px; font-weight: 400; }
 .face-admin-shortcuts > a:hover, .face-admin-pending-row:hover { color: var(--fs-green-ink) !important; }
+
+/* Keep the admin readable even when Django's saved theme is set to dark. */
+html[data-theme="dark"] {
+  color-scheme: light;
+  --body-fg: #19302a;
+  --body-bg: #edf3ef;
+  --body-quiet-color: #4e6258;
+  --body-medium-color: #31483f;
+  --body-loud-color: #19302a;
+  --header-bg: #103d36;
+  --header-color: #ffffff;
+  --header-link-color: #ffffff;
+  --breadcrumbs-bg: #0c5149;
+  --breadcrumbs-fg: #e5f0ec;
+  --link-fg: #0c5149;
+  --hairline-color: #d7e0d9;
+  --border-color: #d7e0d9;
+  --darkened-bg: #f4f7f4;
+  --selected-bg: #d9eee6;
+  --selected-row: #f1e2be;
+  --button-bg: #12685e;
+}
 
 @media (max-width: 1100px) {
   #content { padding: 24px; }
