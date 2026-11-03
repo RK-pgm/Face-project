@@ -1,0 +1,35 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Administrator sign-in{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <section class="panel" aria-labelledby="admin-title">
+        <p class="text-uppercase text-muted small fw-semibold mb-2">Administration</p>
+        <h1 class="auth-card-title" id="admin-title">Administrator sign-in</h1>
+        <p class="auth-card-copy">Sign in to manage members and site activity.</p>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="admin-username">Username</label>
+            <input class="form-control" id="admin-username" name="username" type="text"
+                   autocomplete="username" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="admin-password">Password</label>
+            <input class="form-control" id="admin-password" name="password" type="password"
+                   autocomplete="current-password" required>
+          </div>
+          {% if error %}
+            <div class="result-box error mb-3" role="alert">{{ error }}</div>
+          {% endif %}
+          <button class="btn btn-primary w-100" type="submit">Sign in to admin</button>
+        </form>
+
+        <p class="auth-footer mb-0"><a href="{% url 'login' %}">Back to member sign-in</a></p>
+      </section>
+    </div>
+  </div>
+{% endblock %}

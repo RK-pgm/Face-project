@@ -4,6 +4,7 @@ import logging
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
 from django.db.models import Q, Sum
@@ -176,6 +177,24 @@ def login_view(request):
     request.session[ACTIVE_LOGIN_LOG_KEY] = login_log.pk
 
     return JsonResponse({"ok": True, "redirect": "/dashboard/"})
+
+
+@require_http_methods(["GET", "POST"])
+def administrator_login(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect("admin:index")
+
+    error = ""
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        user = authenticate(request, username=username, password=password)
+        if user is not None and user.is_active and user.is_staff:
+            login(request, user)
+            return redirect("admin:index")
+        error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
+
+    return render(request, "accounts/admin_login.html", {"error": error})
 
 
 @person_login_required
