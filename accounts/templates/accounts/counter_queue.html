@@ -3,9 +3,17 @@
 {% block title %}Counter{% endblock %}
 
 {% block content %}
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">Staff workspace</span>
+      <h1>Counter queue</h1>
+    </div>
+    <span class="member-code">{{ today|date:"j F Y" }}</span>
+  </div>
+
   <div class="panel mb-4">
-    <h1 class="h4 mb-1">Counter — {{ today|date:"j F Y" }}</h1>
-    <p class="lead-note">
+    <h2 class="section-title">Awaiting payment</h2>
+    <p class="section-caption">
       Successful sign-ins today without a recorded sale. Select “Record sale” to enter the amount and payment method.
     </p>
 
@@ -39,8 +47,9 @@
   </div>
 
   <div class="panel">
-    <h2 class="h5">Recorded today (latest 20)</h2>
-    <p class="lead-note">Select an entry to correct its amount or payment method.</p>
+    <span class="eyebrow">Latest activity</span>
+    <h2 class="section-title">Recorded today <span class="lead-note">· latest 20</span></h2>
+    <p class="section-caption">Select an entry to correct its amount or payment method.</p>
 
     <div class="table-responsive">
       <table class="table align-middle mb-0">

@@ -3,10 +3,14 @@
 {% block title %}Daily sales report{% endblock %}
 
 {% block content %}
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">Staff workspace</span>
+      <h1>Daily sales report</h1>
+    </div>
+  </div>
   <div class="panel mb-4">
-    <h1 class="h4 mb-3">Daily sales report</h1>
-
-    <form method="get" class="d-flex align-items-end gap-2 mb-4">
+    <form method="get" class="d-flex flex-wrap align-items-end gap-2 mb-4">
       <div>
         <label class="form-label" for="date">Select date</label>
         <input class="form-control" type="date" id="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
@@ -19,23 +23,23 @@
 
     <div class="row g-3">
       <div class="col-sm-4">
-        <div class="panel text-center mb-0">
-          <p class="lead-note mb-1">Visitors</p>
-          <p class="h3 mb-0">{{ visitor_count }}</p>
+        <div class="report-stat">
+          <p class="report-stat-label mb-1">Visitors</p>
+          <p class="report-stat-value">{{ visitor_count }}</p>
           {% if pending_count %}
             <p class="lead-note small mb-0">{{ pending_count }} sales awaiting entry</p>
           {% endif %}
         </div>
       </div>
       <div class="col-sm-4">
-        <div class="panel text-center mb-0">
-          <p class="lead-note mb-1">Total sales</p>
-          <p class="h3 mb-0">{{ total_amount }} baht</p>
+        <div class="report-stat">
+          <p class="report-stat-label mb-1">Total sales</p>
+          <p class="report-stat-value">{{ total_amount }} <small>baht</small></p>
         </div>
       </div>
       <div class="col-sm-4">
-        <div class="panel text-center mb-0">
-          <p class="lead-note mb-1">Totals by payment method</p>
+        <div class="report-stat">
+          <p class="report-stat-label mb-2">Totals by payment method</p>
           {% for row in totals_by_method %}
             <p class="mb-0">{{ row.label }}: {{ row.amount }} baht</p>
           {% endfor %}
@@ -45,7 +49,8 @@
   </div>
 
   <div class="panel">
-    <h2 class="h5">Sales for {{ selected_date|date:"j F Y" }}</h2>
+    <span class="eyebrow">Transactions</span>
+    <h2 class="section-title">Sales for {{ selected_date|date:"j F Y" }}</h2>
     <div class="table-responsive">
       <table class="table align-middle mb-0">
         <thead>

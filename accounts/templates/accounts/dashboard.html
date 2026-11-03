@@ -3,19 +3,22 @@
 {% block title %}My dashboard{% endblock %}
 
 {% block content %}
-  <div class="panel mb-4">
+  <div class="panel mb-4 profile-panel">
     <div class="row g-4 align-items-center">
       <div class="col-sm-auto text-center">
         <img class="profile-photo" src="{% url 'my_photo' %}" alt="Photo of {{ person.nickname }}">
       </div>
 
       <div class="col-sm">
+        <span class="eyebrow">Member dashboard</span>
         <h1 class="h3 mb-1">{{ person.first_name }} {{ person.last_name }}</h1>
-        <p class="mb-2 fs-5">Nickname: {{ person.nickname }}</p>
-        <p class="mb-1">Member ID: <span class="member-code">{{ person.member_code }}</span></p>
-        <p class="mb-1">Last sign-in: {{ last_login|date:"j F Y H:i" }}</p>
+        <p class="lead-note mb-3">{{ person.nickname }}</p>
+        <div class="profile-facts">
+          <span>Member ID <span class="member-code">{{ person.member_code }}</span></span>
+          <span>Last sign-in · {{ last_login|date:"j F Y H:i" }}</span>
+        </div>
         {% if previous_login %}
-          <p class="mb-0 lead-note">Previous sign-in: {{ previous_login|date:"j F Y H:i" }}</p>
+          <p class="lead-note small mt-2 mb-0">Previous sign-in · {{ previous_login|date:"j F Y H:i" }}</p>
         {% endif %}
       </div>
 
@@ -30,7 +33,8 @@
   </div>
 
   <div class="panel mb-4">
-    <h2 class="h5">Payment for this visit</h2>
+    <span class="eyebrow">This visit</span>
+    <h2 class="section-title">Payment details</h2>
     {% if active_log %}
       <p class="lead-note">Sign-in time: {{ active_log.created_at|date:"j F Y H:i:s" }}</p>
       <form method="post" action="{% url 'dashboard' %}">
@@ -62,8 +66,9 @@
   </div>
 
   <div class="panel">
-    <h2 class="h5">Sign-in history</h2>
-    <p class="lead-note">
+    <span class="eyebrow">Your activity</span>
+    <h2 class="section-title">Sign-in history</h2>
+    <p class="section-caption">
       Showing your 30 most recent sign-in attempts, including failures. Contact an administrator if you see an attempt you did not make.
     </p>
 
