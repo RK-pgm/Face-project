@@ -24,7 +24,10 @@ class Person(models.Model):
     nickname = models.CharField("Nickname", max_length=30)
     member_code = models.CharField("Member ID", max_length=12, unique=True, default=generate_member_code)
     pin_hash = models.CharField("PIN hash", max_length=128)
-    face_photo = models.ImageField("Face photo", upload_to=face_photo_path)
+    face_photo = models.ImageField("Face photo", upload_to=face_photo_path, blank=True, default="")
+    # Vercel's application filesystem is ephemeral/read-only. Keep newly uploaded
+    # face photos in the database there, while retaining ImageField for local/legacy photos.
+    face_photo_data = models.BinaryField("Face photo data", null=True, blank=True, editable=False)
     face_descriptor = models.JSONField("Face descriptor (128 values)")
     consent_pdpa = models.BooleanField("Consent to face data storage", default=False)
     consent_at = models.DateTimeField("Consent time", null=True, blank=True)

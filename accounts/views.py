@@ -7,7 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
 from django.db.models import Sum
-from django.http import FileResponse, Http404, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
@@ -79,7 +79,12 @@ def register(request):
         consent_at=now,
         created_at=now,
     )
-    person.face_photo.save("face.jpg", photo_file, save=False)
+    photo_data = photo_file.read()
+    if settings.ON_VERCEL:
+        person.face_photo_data = photo_data
+    else:
+        photo_file.seek(0)
+        person.face_photo.save("face.jpg", photo_file, save=False)
     person.save()
     sheets.enqueue_member_sync(person.pk)
 
@@ -235,6 +240,10 @@ def logout_view(request):
 
 @person_login_required
 def my_photo(request):
+    if request.person.face_photo_data:
+        response = HttpResponse(bytes(request.person.face_photo_data), content_type="image/jpeg")
+        response["Cache-Control"] = "private, no-store"
+        return response
     photo = request.person.face_photo
     if not photo:
         raise Http404
@@ -286,7 +295,14 @@ def change_face(request):
     old_name = person.face_photo.name
     storage = person.face_photo.storage
     person.face_descriptor = descriptor
-    person.face_photo.save("face.jpg", photo_file, save=False)
+    photo_data = photo_file.read()
+    if settings.ON_VERCEL:
+        person.face_photo_data = photo_data
+        person.face_photo = ""
+    else:
+        photo_file.seek(0)
+        person.face_photo.save("face.jpg", photo_file, save=False)
+        person.face_photo_data = None
     person.save()
     if old_name:
         storage.delete(old_name)
