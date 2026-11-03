@@ -123,15 +123,25 @@ python manage.py runserver
 
 ห้ามส่งไฟล์ .env หรือข้อมูลรับรองขึ้น Git และห้ามใส่ข้อมูลลับไว้ใน README หรือซอร์สโค้ด
 
-## เชื่อมต่อ Google Sheets (ไม่บังคับ)
+## เชื่อมต่อ Google Sheets
 
 1. สร้าง Google Spreadsheet และคัดลอกรหัสจาก URL
 2. สร้าง Google service account และดาวน์โหลดไฟล์ข้อมูลรับรอง
 3. แชร์ Spreadsheet ให้กับอีเมลของ service account โดยให้สิทธิ์แก้ไข
-4. กำหนด GOOGLE_SHEET_ID และ GOOGLE_SERVICE_ACCOUNT_FILE ใน .env หรือใช้ GOOGLE_SERVICE_ACCOUNT_JSON
+4. กำหนด `GOOGLE_SHEET_ID` และ `GOOGLE_SERVICE_ACCOUNT_FILE` ใน `.env` หรือใช้ `GOOGLE_SERVICE_ACCOUNT_JSON`
 5. หากต้องการใช้ worksheet เฉพาะ ให้กำหนดชื่อใน GOOGLE_SHEET_WORKSHEET
 
-เมื่อยังไม่ได้กำหนดค่า Google Sheets ระบบยังใช้งานและบันทึกข้อมูลใน SQLite ได้ ต้องแชร์ชีตให้ service account และกำหนด ID กับ credentials ให้ตรงกัน การซิงก์ทำงานเบื้องหลังและอาจใช้เวลาสักครู่ ตรวจสอบสถานะใน Django Admin หรือสั่งซิงก์รายการที่ค้างด้วย `python manage.py sync_sheet`
+หลังตั้งค่าแล้ว ระบบจะส่งข้อมูลสมาชิกที่ไม่รวม PIN และข้อมูลใบหน้าไปยังแท็บ `Members` และส่งประวัติเข้าออกกับยอดขายไปยังแท็บหลัก ไม่ควรเปิดสิทธิ์แชร์ชีตเป็นสาธารณะ ข้อมูลในชีตเป็นข้อมูลส่วนบุคคล ให้จำกัดสิทธิ์ผู้เข้าถึง
+
+### ตั้งค่า Google Sheets บน Vercel
+
+เพิ่ม Environment Variables ใน Vercel Project Settings (Production และ Preview):
+
+- `GOOGLE_SHEET_ID`: รหัส Spreadsheet จาก URL
+- `GOOGLE_SERVICE_ACCOUNT_JSON`: เนื้อหาไฟล์ JSON ของ service account ทั้งก้อน
+- `GOOGLE_SHEET_WORKSHEET`: ชื่อแท็บสำหรับประวัติเข้าออกและยอดขาย (ไม่บังคับ; ค่าเริ่มต้นใช้แท็บแรก)
+
+เปิด Google Spreadsheet แล้วแชร์ให้กับค่า `client_email` ใน service account โดยให้สิทธิ์ Editor แท็บ `Members` จะถูกสร้างให้อัตโนมัติเมื่อมีสมาชิกสมัครใหม่ บน Vercel ระบบรอผลซิงก์ก่อนจบ request เพื่อไม่ให้ background thread หยุดกลางทาง รายการที่ค้างหรือส่งไม่สำเร็จสามารถตรวจสอบและลองใหม่ผ่าน Django Admin/คำสั่ง `python manage.py sync_sheet` เมื่อเรียกใช้ใน environment ที่เชื่อมฐานข้อมูลเดียวกัน
 
 แต่ละเครื่อง/โฮสต์ที่รันแอปมีฐานข้อมูล SQLite และโฟลเดอร์ `media/` ของตัวเอง การ push โค้ดขึ้น GitHub ไม่ได้ย้ายหรือรวมข้อมูลเหล่านี้ ต้องสำรอง/ย้าย `db.sqlite3` และ `media/` ด้วยวิธีที่ปลอดภัย หรือใช้ฐานข้อมูลและพื้นที่เก็บไฟล์ที่โฮสต์ร่วมกันได้
 หากไม่ได้ตั้งค่า Google Sheets ระบบยังบันทึกข้อมูลใน SQLite ได้ การซิงก์อาจใช้เวลาสักครู่ และตรวจสอบสถานะหรือข้อผิดพลาดได้ใน Django Admin
@@ -210,5 +220,6 @@ Vercel ตรวจจับโปรเจกต์ Django จาก `manage.py
 - `DATABASE_URL`: URL ของ PostgreSQL ที่เชื่อมกับโปรเจกต์ หากไม่กำหนด ระบบจะใช้ SQLite ซึ่งไม่ใช่ฐานข้อมูลถาวรบน serverless
 - `DJANGO_ALLOWED_HOSTS`: เพิ่ม host ของ custom domain (โดเมน `.vercel.app` รองรับอัตโนมัติ)
 - `DJANGO_CSRF_TRUSTED_ORIGINS`: เพิ่ม origin แบบเต็ม เช่น `https://example.com` เมื่อใช้ custom domain
+- `GOOGLE_SHEET_ID` และ `GOOGLE_SERVICE_ACCOUNT_JSON`: ตั้งค่าตามหัวข้อ Google Sheets ด้านบน
 
 หลังตั้งค่า PostgreSQL ให้รัน `python manage.py migrate` และ `python manage.py createsuperuser` กับฐานข้อมูลนั้น Vercel จะเสิร์ฟ static files ที่ collect ได้จาก CDN ส่วนไฟล์อัปโหลดใน `media/` ต้องใช้ object storage แบบถาวรก่อนบันทึกข้อมูลสมาชิกจริง เพราะไฟล์ใน serverless อาจหายได้

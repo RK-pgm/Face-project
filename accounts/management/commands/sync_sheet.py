@@ -11,10 +11,14 @@ class Command(BaseCommand):
         if not sheets.is_configured():
             self.stderr.write("Google Sheets is not configured. See .env.example and README.md.")
             return
+        members_sent, members_failed = sheets.sync_pending_members()
         sent, failed = sheets.sync_pending_logs()
         left = LoginLog.objects.filter(
             success=True,
             logged_out_at__isnull=False,
             sheet_status__in=["pending", "failed", "sending"],
         ).count()
-        self.stdout.write(f"Uploaded {sent} rows; {failed} failed; {left} remain pending.")
+        self.stdout.write(
+            f"Uploaded {members_sent} members and {sent} activity rows; "
+            f"{members_failed + failed} failed; {left} activity rows remain pending."
+        )

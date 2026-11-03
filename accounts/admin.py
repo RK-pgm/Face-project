@@ -6,11 +6,14 @@ from .models import LoginLog, LoginThrottle, Person
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
 
-    list_display = ("member_code", "first_name", "last_name", "nickname", "created_at", "consent_pdpa")
+    list_display = (
+        "member_code", "first_name", "last_name", "nickname", "created_at",
+        "consent_pdpa", "sheet_synced_at",
+    )
     search_fields = ("member_code", "first_name", "last_name", "nickname")
 
     exclude = ("pin_hash", "face_descriptor")
-    readonly_fields = ("member_code", "created_at", "consent_at")
+    readonly_fields = ("member_code", "created_at", "consent_at", "sheet_synced_at", "sheet_error")
 
 
 @admin.register(LoginLog)

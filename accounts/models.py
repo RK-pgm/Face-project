@@ -30,6 +30,8 @@ class Person(models.Model):
     consent_at = models.DateTimeField("Consent time", null=True, blank=True)
 
     created_at = models.DateTimeField("Registration date", default=timezone.now)
+    sheet_synced_at = models.DateTimeField("Google Sheets sync time", null=True, blank=True)
+    sheet_error = models.CharField("Latest Google Sheets error", max_length=200, blank=True)
 
     class Meta:
         ordering = ["-created_at"]

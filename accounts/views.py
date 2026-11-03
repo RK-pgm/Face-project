@@ -81,6 +81,7 @@ def register(request):
     )
     person.face_photo.save("face.jpg", photo_file, save=False)
     person.save()
+    sheets.enqueue_member_sync(person.pk)
 
     messages.success(
         request,
