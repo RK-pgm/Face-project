@@ -40,7 +40,8 @@ body, #container { background: var(--fs-pale); color: var(--fs-ink); }
 .breadcrumbs { padding: 12px 32px; color: #e5f0ec; background: var(--fs-green-ink); }
 .breadcrumbs a { color: #fff; }
 #content { max-width: 1600px; margin: 0 auto; padding: 32px; }
-.dashboard #content { width: auto; }
+.dashboard #nav-sidebar { display: none !important; }
+.dashboard #content { width: auto; max-width: none; }
 #content h1 { color: var(--fs-ink); font-size: 25px; font-weight: 700; }
 a:link, a:visited { color: var(--fs-green-ink); }
 a:hover { color: #963c32; }
