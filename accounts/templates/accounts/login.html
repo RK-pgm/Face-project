@@ -9,12 +9,12 @@
       <div class="panel">
         <h1 class="auth-card-title">Member sign-in</h1>
         <p class="auth-card-copy">
-          Enter your first name, full name, or nickname as registered, then your PIN. The camera will verify your face.
+          Sign in to your account and verify your face.
         </p>
 
         <form id="login-form" novalidate>
           <div class="mb-3">
-            <label class="form-label" for="name">First name, full name, or nickname</label>
+            <label class="form-label" for="name">Name</label>
             <input
               class="form-control"
               id="name"
@@ -48,6 +48,9 @@
 
         <p class="auth-footer">
           New here? <a href="{% url 'register' %}">Register</a>
+        </p>
+        <p class="auth-footer mb-0">
+          <a href="{% url 'admin:index' %}">Administrator sign-in</a>
         </p>
       </div>
     </div>
