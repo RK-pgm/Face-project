@@ -1,2 +1,14 @@
+[project]
+name = "face-login-project"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "Django>=5.2,<5.3",
+    "Pillow>=10.0",
+    "gspread>=6.0",
+    "dj-database-url>=2.2,<3",
+    "psycopg[binary]>=3.2,<4",
+]
+
 [tool.vercel.scripts]
 build = "python scripts/vercel_migrate.py"
