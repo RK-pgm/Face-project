@@ -139,10 +139,10 @@ def login_view(request):
     if not name or not PIN_PATTERN.match(pin) or descriptor is None:
         return _fail(name, None, "format", key if name else None)
 
-    # The form accepts a first name or the full name shown during registration.
-    # Resolve either form here; the PIN and face checks still identify the member.
+    # Accept any name shown during registration. The PIN and face checks still
+    # identify the member after resolving the entered name.
     name_parts = name.split(" ", 1)
-    name_query = Q(first_name__iexact=name)
+    name_query = Q(first_name__iexact=name) | Q(nickname__iexact=name)
     if len(name_parts) == 2:
         name_query |= Q(first_name__iexact=name_parts[0], last_name__iexact=name_parts[1])
     candidates = list(Person.objects.filter(name_query))
