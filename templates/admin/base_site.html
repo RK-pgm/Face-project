@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} · Face Sign-in{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'accounts/css/admin.css' %}?v=20261103-member-studio">
+{% endblock %}
+
+{% block branding %}
+  <div id="site-name">
+    <a href="{% url 'admin:index' %}">
+      <span class="member-studio-mark" aria-hidden="true">F</span>
+      <span>Face Sign-in <small>Member Studio</small></span>
+    </a>
+  </div>
+{% endblock %}
+
+{% block nav-global %}
+  <nav class="member-studio-admin-nav" aria-label="Administrator navigation">
+    <a href="{% url 'admin:index' %}">ภาพรวม</a>
+    <a href="{% url 'counter_queue' %}">คิววันนี้</a>
+    <a href="{% url 'daily_report' %}">รายงาน</a>
+    <a class="admin-public-link" href="{% url 'home' %}">หน้าสมาชิก</a>
+  </nav>
+{% endblock %}

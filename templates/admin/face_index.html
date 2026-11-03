@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="face-admin-home">
+  <header class="face-admin-heading">
+    <div>
+      <h1>ภาพรวมสมาชิก</h1>
+      <p class="face-admin-intro">สรุปการเข้าใช้งานและงานที่ต้องจัดการ · {{ today|date:"j F Y" }}</p>
+    </div>
+    <div class="face-admin-heading-actions">
+      <a class="face-admin-primary" href="{% url 'counter_queue' %}">บันทึกยอดที่รอ</a>
+      <a class="face-admin-secondary" href="{% url 'daily_report' %}">ดูรายงาน</a>
+    </div>
+  </header>
+
+  <section class="face-admin-metrics" aria-label="สรุประบบ">
+    <a class="face-metric face-metric--dark" href="{% url 'admin:accounts_person_changelist' %}">
+      <span>สมาชิกทั้งหมด</span><strong>{{ member_total }}</strong><small>บัญชีที่ลงทะเบียน</small>
+    </a>
+    <a class="face-metric face-metric--mint" href="{% url 'admin:accounts_loginlog_changelist' %}?success__exact=1">
+      <span>เข้าใช้งานวันนี้</span><strong>{{ checkins_today }}</strong><small>รายการยืนยันตัวตนสำเร็จ</small>
+    </a>
+    <a class="face-metric face-metric--gold" href="{% url 'counter_queue' %}">
+      <span>รอบันทึกยอด</span><strong>{{ sales_waiting }}</strong><small>รายการวันนี้ที่ยังไม่ลงยอด</small>
+    </a>
+    <a class="face-metric face-metric--coral" href="{% url 'admin:accounts_loginlog_changelist' %}">
+      <span>Google Sheets</span><strong>{{ sheets_attention }}</strong><small>รายการรอซิงก์หรือมีปัญหา</small>
+    </a>
+  </section>
+
+  <div class="face-admin-columns">
+    <section class="face-admin-section face-admin-activity">
+      <div class="face-admin-section-head">
+        <div><h2>การเข้าใช้งานล่าสุด</h2><p>รายการยืนยันตัวตนสำเร็จล่าสุด</p></div>
+        <a href="{% url 'admin:accounts_loginlog_changelist' %}">ดูประวัติทั้งหมด</a>
+      </div>
+      <div class="face-admin-table-wrap">
+        <table class="face-admin-table">
+          <thead><tr><th>สมาชิก</th><th>เวลา</th><th>การชำระ</th><th>Sheets</th></tr></thead>
+          <tbody>
+            {% for log in recent_activity %}
+              <tr>
+                <td><strong>{{ log.person.full_name|default:log.attempted_name }}</strong><small>{% if log.person %}{{ log.person.member_code }}{% else %}ไม่พบข้อมูลสมาชิก{% endif %}</small></td>
+                <td class="face-admin-number">{{ log.created_at|date:"H:i" }}<small>{{ log.created_at|date:"j M Y" }}</small></td>
+                <td>{% if log.amount is None %}<span class="face-state face-state--waiting">รอลงยอด</span>{% else %}<span class="face-state face-state--done">{{ log.amount|floatformat:2 }} บาท</span>{% endif %}</td>
+                <td>{% if log.sheet_status == "sent" %}<span class="face-state face-state--done">ซิงก์แล้ว</span>{% elif log.sheet_status == "failed" %}<span class="face-state face-state--failed">ผิดพลาด</span>{% elif log.sheet_status == "pending" or log.sheet_status == "sending" %}<span class="face-state face-state--waiting">รอซิงก์</span>{% else %}<span class="face-state">—</span>{% endif %}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="face-admin-empty">ยังไม่มีรายการเข้าใช้งาน</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="face-admin-side">
+      <section class="face-admin-section">
+        <div class="face-admin-section-head"><div><h2>งานที่ต้องทำ</h2><p>คิวของวันนี้</p></div></div>
+        <div class="face-admin-pending-list">
+          {% for log in pending_sales %}
+            <a class="face-admin-pending-row" href="{% url 'record_sale' log.id %}">
+              <span><strong>{{ log.person.full_name|default:log.attempted_name }}</strong><small>{{ log.created_at|date:"H:i" }}{% if log.person %} · {{ log.person.member_code }}{% endif %}</small></span>
+              <span aria-hidden="true">›</span>
+            </a>
+          {% empty %}
+            <p class="face-admin-empty-line">ไม่มีรายการรอลงยอดในวันนี้</p>
+          {% endfor %}
+        </div>
+        <a class="face-admin-section-link" href="{% url 'counter_queue' %}">เปิดคิวบันทึกยอด</a>
+      </section>
+
+      <section class="face-admin-section face-admin-shortcuts">
+        <div class="face-admin-section-head"><div><h2>จัดการข้อมูล</h2><p>ทางลัดสำหรับผู้ดูแล</p></div></div>
+        <a href="{% url 'admin:accounts_person_changelist' %}">สมาชิก <span>ดูและแก้ไขบัญชี</span></a>
+        <a href="{% url 'admin:accounts_loginlog_changelist' %}">ประวัติการเข้าใช้ <span>การยืนยันและยอดชำระ</span></a>
+        <a href="{% url 'admin:accounts_loginthrottle_changelist' %}">การป้องกันการลองรหัส <span>ตรวจสอบการล็อกชั่วคราว</span></a>
+        <a href="{% url 'admin:auth_user_changelist' %}">บัญชีผู้ดูแล <span>จัดการผู้ดูแลและสิทธิ์</span></a>
+        <a href="{% url 'daily_report' %}">รายงานประจำวัน <span>สรุปจำนวนเข้าใช้และยอดขาย</span></a>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

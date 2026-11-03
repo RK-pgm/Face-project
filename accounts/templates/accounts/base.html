@@ -7,7 +7,7 @@
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}Face Sign-in{% endblock %} · Member Access</title>
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
-  <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}?v=20261103-face-first-v4">
+  <link rel="stylesheet" href="{% static 'accounts/css/style.css' %}?v=20261103-member-studio-v1">
 </head>
 <body data-model-url="{% static 'vendor/face-api/models' %}">
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -25,11 +25,11 @@
 
       <nav class="site-nav" aria-label="Main navigation">
         {% if user.is_authenticated and user.is_staff %}
+          <a class="nav-link p-0" href="{% url 'admin:index' %}">Overview</a>
           <a class="nav-link p-0" href="{% url 'counter_queue' %}">Counter</a>
           <a class="nav-link p-0" href="{% url 'daily_report' %}">Reports</a>
-        {% endif %}
-
-        {% if person %}
+          <a class="nav-link p-0" href="{% url 'admin:logout' %}">Sign out</a>
+        {% elif person %}
           <a class="nav-link p-0" href="{% url 'dashboard' %}">My dashboard</a>
           <form method="post" action="{% url 'logout' %}" class="m-0">
             {% csrf_token %}
