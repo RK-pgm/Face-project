@@ -11,4 +11,4 @@ dependencies = [
 ]
 
 [tool.vercel.scripts]
-build = "python scripts/vercel_migrate.py"
+build = "uv run python scripts/vercel_migrate.py"
