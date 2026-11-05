@@ -487,6 +487,13 @@ body { background: var(--paper); }
   }
   .table tbody tr:hover > td:first-child { background: var(--brand-pale); }
 }
+@media (max-width: 390px) {
+  .page, .site-bar .page { width: calc(100% - 1rem); }
+  .panel, .camera-card { padding: .85rem; }
+  .navbar-brand { max-width: 58vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn, button, input[type="submit"] { min-height: 44px; }
+  .profile-facts { grid-template-columns: minmax(0, 1fr); }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

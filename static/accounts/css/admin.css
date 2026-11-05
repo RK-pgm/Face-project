@@ -152,15 +152,18 @@ html[data-theme="dark"] {
 @media (max-width: 1100px) {
   #content { padding: 24px; }
   .face-admin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .face-admin-columns { grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 16px; }
+  .face-admin-columns { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .face-admin-section { padding: 18px; }
 }
 @media (max-width: 760px) {
-  #header { grid-template-columns: minmax(0, 1fr); padding: 12px 16px; }
+  #header { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; padding: 12px 16px; }
   #user-tools { grid-column: 1; grid-row: 3; text-align: left; }
+  #user-tools form { display: inline-block; }
+  #user-tools a, #user-tools button { display: inline-flex; min-height: 40px; align-items: center; }
   .breadcrumbs { padding: 10px 16px; }
   #content { padding: 18px 14px 28px; }
-  .member-studio-admin-nav { grid-column: 1; grid-row: 2; flex-wrap: wrap; gap: 4px 16px; }
+  .member-studio-admin-nav { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 8px; }
+  .member-studio-admin-nav a { min-width: 0; min-height: 42px; justify-content: center; padding: 0 6px; border: 1px solid #ffffff28; border-radius: 7px; font-size: 12px; white-space: nowrap; }
   .face-admin-heading { min-height: 0; flex-direction: column; align-items: flex-start; padding: 23px 20px; }
   .face-admin-heading h1 { font-size: 25px !important; }
   .face-admin-heading::after { right: -165px; top: -90px; }
@@ -169,6 +172,14 @@ html[data-theme="dark"] {
   .face-metric strong { font-size: 30px; }
   .face-admin-columns { grid-template-columns: minmax(0, 1fr); }
   .face-admin-table { min-width: 600px; }
+}
+@media (max-width: 390px) {
+  #content { padding-inline: 10px; }
+  .face-admin-metrics { grid-template-columns: minmax(0, 1fr); }
+  .face-metric { min-height: 112px; }
+  .member-studio-admin-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .face-admin-heading-actions { width: 100%; }
+  .face-admin-heading-actions a { flex: 1 1 auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
