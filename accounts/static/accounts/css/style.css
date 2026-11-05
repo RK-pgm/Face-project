@@ -494,6 +494,28 @@ body { background: var(--paper); }
   .btn, button, input[type="submit"] { min-height: 44px; }
   .profile-facts { grid-template-columns: minmax(0, 1fr); }
 }
+@media (max-width: 767.98px) {
+  .auth-layout,
+  .auth-layout.auth-layout--sign-in {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100%;
+    gap: 1rem;
+  }
+  .auth-layout--sign-in .auth-form-column,
+  .auth-layout--sign-in .auth-camera-column {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    width: 100%;
+    min-width: 0;
+    order: initial;
+  }
+  .auth-layout--sign-in .auth-form-column { order: 0; }
+  .auth-layout--sign-in .auth-camera-column { order: 1; }
+  .auth-layout .panel,
+  .auth-layout .camera-card { width: 100%; min-width: 0; }
+  .camera-frame { width: 100%; aspect-ratio: 4 / 3; }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
